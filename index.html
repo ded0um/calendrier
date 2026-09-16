@@ -3,476 +3,409 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Planificateur de Vacances & CP</title>
+  <title>Tableau de Bord & Planning</title>
   <style>
     :root {
-      --bg-weekend: #cbd5e1;
-      --text-weekend: #334155;
-      --bg-robin: #c084fc;
-      --text-robin: #ffffff;
-      --bg-ferie: #fef08a;
-      --text-ferie: #854d0e;
-      --bg-vacances: #f1f5f9;
-      --border-vacances: #38bdf8;
-      --bg-cp: #60a5fa;
-      --text-cp: #ffffff;
-      --primary: #2563eb;
+      --bg-main: #000000;
+      --bg-card: #0b0b0b;
+      --bg-panel: #111111;
+      --bg-input: #141414;
+      --accent: #ff8c00;
+      --border-color: #333333;
+      --text-main: #f5f5f5;
+      --text-muted: #888888;
+      --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
 
-    * { box-sizing: border-box; }
-    body {
-      font-family: system-ui, -apple-system, sans-serif;
+    * {
+      box-sizing: border-box;
       margin: 0;
-      padding: 16px;
-      background-color: #f8fafc;
-      color: #0f172a;
+      padding: 0;
     }
 
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      background: white;
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      font-family: var(--font-family);
       padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-    }
-
-    header {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: center;
-      gap: 16px;
-      margin-bottom: 20px;
-      padding-bottom: 16px;
-      border-bottom: 2px solid #e2e8f0;
-    }
-
-    .controls-main {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    button, select {
-      padding: 8px 14px;
-      border: 1px solid #cbd5e1;
-      border-radius: 6px;
-      background: #fff;
-      font-size: 0.9rem;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    button.active {
-      background: var(--primary);
-      color: white;
-      border-color: var(--primary);
-    }
-
-    /* Trackers CP */
-    .cp-tracker {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 12px;
-      background: #f1f5f9;
-      padding: 16px;
-      border-radius: 8px;
-      margin-bottom: 20px;
-    }
-
-    .input-group {
       display: flex;
       flex-direction: column;
-      gap: 4px;
-    }
-
-    .input-group label {
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: #475569;
-    }
-
-    .input-group input {
-      padding: 6px 10px;
-      border: 1px solid #cbd5e1;
-      border-radius: 6px;
-      font-size: 1rem;
-    }
-
-    .balance-card {
-      background: #ffffff;
-      padding: 10px 14px;
-      border-radius: 6px;
-      border: 1px solid #e2e8f0;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-
-    .balance-title { font-size: 0.8rem; color: #475569; font-weight: 600; }
-    .balance-value { font-size: 1.2rem; font-weight: 700; color: var(--primary); }
-
-    /* Légende */
-    .legend {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-bottom: 20px;
-      font-size: 0.85rem;
-    }
-
-    .legend-item { display: flex; align-items: center; gap: 6px; }
-    .color-box { width: 16px; height: 16px; border-radius: 4px; border: 1px solid rgba(0,0,0,0.1); }
-
-    /* Vues du calendrier */
-    .view-container { display: flex; flex-direction: column; gap: 24px; }
-    
-    .year-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
       gap: 20px;
     }
 
-    .month-card {
-      border: 1px solid #e2e8f0;
+    /* Top bar */
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 15px 20px;
       border-radius: 8px;
-      padding: 12px;
-      background: #ffffff;
     }
 
-    .month-title {
+    .title {
+      font-size: 1.25rem;
       font-weight: 700;
-      text-align: center;
-      margin-bottom: 10px;
-      color: #1e293b;
-      text-transform: capitalize;
+      color: var(--text-main);
     }
 
-    .calendar-grid {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 3px;
-    }
-
-    .day-header {
-      font-size: 0.75rem;
-      font-weight: 700;
-      text-align: center;
-      padding: 4px;
-      color: #64748b;
-    }
-
-    .day-cell {
-      min-height: 48px;
-      padding: 4px;
-      border: 1px solid #f1f5f9;
-      border-radius: 4px;
+    /* Buttons */
+    .btn-action {
+      background: var(--bg-panel);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      padding: 8px 16px;
+      border-radius: 6px;
       cursor: pointer;
-      user-select: none;
+      font-family: inherit;
+      font-size: 0.9rem;
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    .btn-action:hover {
+      border-color: var(--accent);
+      background: #181818;
+    }
+
+    .btn-save {
+      background: var(--accent);
+      color: #000000;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-cancel {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border-color);
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    /* Grid & Calendar Dashboard Mockup */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 20px;
+    }
+
+    .card-title {
+      font-size: 1rem;
+      color: var(--accent);
+      margin-bottom: 15px;
+      font-weight: 600;
+    }
+
+    /* Overlay & Modal Windows */
+    .inspection-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .inspection-overlay.visible {
+      display: flex;
+    }
+
+    .inspection-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      width: 90%;
+      max-width: 520px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .inspection-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 10px;
+    }
+
+    .inspection-title {
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    .inspection-close {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+
+    .inspection-body {
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
-      position: relative;
+      gap: 15px;
     }
 
-    .day-number { font-size: 0.8rem; font-weight: 600; }
-    .day-tag { font-size: 0.65rem; font-weight: 700; text-align: right; }
+    .inspection-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      border-top: 1px solid var(--border-color);
+      padding-top: 15px;
+    }
 
-    /* Couleurs des états */
-    .day-cell.weekend { background-color: var(--bg-weekend); color: var(--text-weekend); }
-    .day-cell.robin { background-color: var(--bg-robin) !important; color: var(--text-robin) !important; }
-    .day-cell.ferie { background-color: var(--bg-ferie) !important; color: var(--text-ferie) !important; }
-    .day-cell.vacances { border-bottom: 3px solid var(--border-vacances); }
-    .day-cell.cp { background-color: var(--bg-cp) !important; color: var(--text-cp) !important; }
+    /* Form controls */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
 
-    .single-month-view .day-cell { min-height: 80px; }
+    .form-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .inspection-notes {
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 8px;
+      border-radius: 4px;
+      width: 100%;
+      font-family: inherit;
+    }
+
+    .radio-group {
+      display: flex;
+      gap: 15px;
+    }
+
+    .radio-label {
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
 
-<div class="container">
-  <header>
-    <div class="controls-main">
-      <button id="btnPrev">&lt;</button>
-      <span id="currentPeriodLabel" style="font-weight: 700; font-size: 1.2rem;"></span>
-      <button id="btnNext">&gt;</button>
-      
-      <select id="yearSelect"></select>
-      <select id="monthSelect">
-        <option value="-1">Vue Annuelle</option>
-        <option value="0">Janvier</option>
-        <option value="1">Février</option>
-        <option value="2">Mars</option>
-        <option value="3">Avril</option>
-        <option value="4">Mai</option>
-        <option value="5">Juin</option>
-        <option value="6">Juillet</option>
-        <option value="7">Août</option>
-        <option value="8">Septembre</option>
-        <option value="9">Octobre</option>
-        <option value="10">Novembre</option>
-        <option value="11">Décembre</option>
-      </select>
-    </div>
-
+  <!-- Barre supérieure d'actions -->
+  <header class="header-bar">
+    <div class="title">Tableau de Bord</div>
     <div>
-      <button id="btnToggleRobin">Week-end Robin (1/2)</button>
+      <button class="btn-action" onclick="openRobinSettings()" title="Paramètres du planning de Robin">
+        ⚙️ Planning Robin
+      </button>
     </div>
   </header>
 
-  <!-- Décompte Congés -->
-  <div class="cp-tracker">
-    <div class="input-group">
-      <label for="cpN1">Solde CP N-1</label>
-      <input type="number" id="cpN1" value="0" min="0" step="0.5">
-    </div>
-    <div class="input-group">
-      <label for="cpN">Solde CP N</label>
-      <input type="number" id="cpN" value="25" min="0" step="0.5">
-    </div>
-    <div class="balance-card">
-      <span class="balance-title">CP Posés (décomptés)</span>
-      <span class="balance-value" id="totalPose">0 j</span>
-    </div>
-    <div class="balance-card">
-      <span class="balance-title">Solde CP Restant</span>
-      <span class="balance-value" id="soldeRestant">25 j</span>
-    </div>
-  </div>
+  <!-- Contenu principal / Aperçu du tableau de bord -->
+  <main class="dashboard-grid">
+    <section class="card">
+      <div class="card-title">Calendrier / Vue d'ensemble</div>
+      <p style="color: var(--text-muted); font-size: 0.9rem;">
+        Cliquez sur le bouton « ⚙️ Planning Robin » en haut à droite pour configurer la règle d'alternance et les périodes personnalisées.
+      </p>
+    </section>
+  </main>
 
-  <!-- Légende -->
-  <div class="legend">
-    <div class="legend-item"><div class="color-box" style="background: var(--bg-weekend);"></div> Weekend</div>
-    <div class="legend-item"><div class="color-box" style="background: var(--bg-robin);"></div> Week-end Robin</div>
-    <div class="legend-item"><div class="color-box" style="background: var(--bg-ferie);"></div> Jour férié</div>
-    <div class="legend-item"><div class="color-box" style="border-bottom: 3px solid var(--border-vacances);"></div> Vacances Zone B</div>
-    <div class="legend-item"><div class="color-box" style="background: var(--bg-cp);"></div> CP Posé</div>
-  </div>
-
-  <div id="calendarView" class="view-container"></div>
-</div>
-
-<script>
-  let currentYear = new Date().getFullYear();
-  let currentMonth = -1; // -1 = Année complète
-  let robinActive = true;
-  let cpPosed = JSON.parse(localStorage.getItem('cp_posed_dates') || '{}');
-
-  // Référence 1/2 weekend Robin (Date d'un samedi de garde)
-  const robinRefSaturday = new Date(2026, 8, 5); // 5 Septembre 2026
-
-  // Définition Jours Fériés de base
-  function getFeries(year) {
-    const feries = [
-      `${year}-01-01`, `${year}-05-01`, `${year}-05-08`, 
-      `${year}-07-14`, `${year}-08-15`, `${year}-11-01`, 
-      `${year}-11-11`, `${year}-12-25`
-    ];
-    // Calcul Pâques & Ascension
-    const a = year % 19, b = Math.floor(year / 100), c = year % 100;
-    const d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25);
-    const g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30;
-    const i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7;
-    const m = Math.floor((a + 11 * h + 22 * l) / 451);
-    const month = Math.floor((h + l - 7 * m + 114) / 31) - 1;
-    const day = ((h + l - 7 * m + 114) % 31) + 1;
-    
-    const paques = new Date(year, month, day);
-    const lundiPaques = new Date(paques); lundiPaques.setDate(paques.getDate() + 1);
-    const ascension = new Date(paques); ascension.setDate(paques.getDate() + 39);
-    const pentecote = new Date(paques); pentecote.setDate(paques.getDate() + 50);
-
-    const formatDate = d => d.toISOString().split('T')[0];
-    feries.push(formatDate(lundiPaques), formatDate(ascension), formatDate(pentecote));
-    return feries;
-  }
-
-  // Vacances Scolaires Zone B (Exemple plages 2026-2027)
-  const vacancesZoneB = [
-    { start: '2026-10-17', end: '2026-11-02' },
-    { start: '2026-12-19', end: '2027-01-04' },
-    { start: '2027-02-06', end: '2027-02-22' },
-    { start: '2027-04-03', end: '2027-04-19' },
-    { start: '2027-07-03', end: '2027-09-01' }
-  ];
-
-  function isVacances(dateStr) {
-    return vacancesZoneB.some(v => dateStr >= v.start && dateStr <= v.end);
-  }
-
-  function isRobinWeekend(date) {
-    const day = date.getDay();
-    if (day !== 0 && day !== 6) return false;
-    
-    // Calcul de la différence en semaines par rapport au samedi de référence
-    const sat = new Date(date);
-    if (day === 0) sat.setDate(sat.getDate() - 1);
-    const diffWeeks = Math.round((sat - robinRefSaturday) / (7 * 24 * 3600 * 1000));
-    return Math.abs(diffWeeks) % 2 === 0;
-  }
-
-  function initControls() {
-    const yearSel = document.getElementById('yearSelect');
-    for (let y = currentYear - 1; y <= currentYear + 3; y++) {
-      const opt = document.createElement('option');
-      opt.value = y; opt.textContent = y;
-      if (y === currentYear) opt.selected = true;
-      yearSel.appendChild(opt);
-    }
-
-    yearSel.onchange = (e) => { currentYear = parseInt(e.target.value); render(); };
-    document.getElementById('monthSelect').onchange = (e) => { currentMonth = parseInt(e.target.value); render(); };
-    
-    document.getElementById('btnPrev').onclick = () => navigate(-1);
-    document.getElementById('btnNext').onclick = () => navigate(1);
-
-    const btnRobin = document.getElementById('btnToggleRobin');
-    btnRobin.onclick = () => {
-      robinActive = !robinActive;
-      btnRobin.classList.toggle('active', robinActive);
-      render();
-    };
-    btnRobin.classList.add('active');
-
-    document.getElementById('cpN1').onchange = updateCounters;
-    document.getElementById('cpN').onchange = updateCounters;
-  }
-
-  function navigate(direction) {
-    if (currentMonth === -1) {
-      currentYear += direction;
-      document.getElementById('yearSelect').value = currentYear;
-    } else {
-      currentMonth += direction;
-      if (currentMonth > 11) { currentMonth = 0; currentYear++; }
-      if (currentMonth < 0) { currentMonth = 11; currentYear--; }
-      document.getElementById('yearSelect').value = currentYear;
-      document.getElementById('monthSelect').value = currentMonth;
-    }
-    render();
-  }
-
-  function renderMonthGrid(year, month) {
-    const card = document.createElement('div');
-    card.className = 'month-card';
-
-    const monthNames = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
-    card.innerHTML = `<div class="month-title">${monthNames[month]} ${year}</div>`;
-
-    const grid = document.createElement('div');
-    grid.className = 'calendar-grid';
-    
-    ['L', 'M', 'M', 'J', 'V', 'S', 'D'].forEach(h => {
-      grid.innerHTML += `<div class="day-header">${h}</div>`;
-    });
-
-    const firstDay = new Date(year, month, 1);
-    let startingDay = firstDay.getDay() - 1;
-    if (startingDay === -1) startingDay = 6;
-
-    const totalDays = new Date(year, month + 1, 0).getDate();
-    const feries = getFeries(year);
-
-    for (let i = 0; i < startingDay; i++) {
-      grid.appendChild(document.createElement('div'));
-    }
-
-    for (let day = 1; day <= totalDays; day++) {
-      const date = new Date(year, month, day);
-      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  <!-- Modale de configuration du planning de Robin -->
+  <div id="robin-settings-overlay" class="inspection-overlay">
+    <div class="inspection-panel">
+      <div class="inspection-header">
+        <span class="inspection-title">⚙️ Configuration — Planning de Robin</span>
+        <button class="inspection-close" onclick="closeRobinSettings()">✕</button>
+      </div>
       
-      const cell = document.createElement('div');
-      cell.className = 'day-cell';
-      cell.dataset.date = dateStr;
+      <div class="inspection-body">
+        <!-- Section 1 : Règle 1 weekend sur 2 -->
+        <div class="form-group" style="background: var(--bg-panel); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color);">
+          <label class="form-label" style="color: var(--accent); font-weight: 700; margin-bottom: 8px;">
+            Alternance 1 week-end sur 2
+          </label>
+          
+          <label class="radio-label" style="margin-bottom: 10px;">
+            <input type="checkbox" id="robin-enable-alternate" onchange="toggleAlternateSettings()" checked>
+            Activer la coloration automatique 1 WE / 2
+          </label>
 
-      const isWe = date.getDay() === 0 || date.getDay() === 6;
-      const isFerie = feries.includes(dateStr);
-      const isVac = isVacances(dateStr);
-      const isRobin = robinActive && isRobinWeekend(date);
-      const isCP = cpPosed[dateStr];
+          <div id="alternate-options" class="radio-group" style="flex-direction: column; gap: 8px;">
+            <span class="form-label">Colorer les week-ends des semaines :</span>
+            <div style="display: flex; gap: 15px;">
+              <label class="radio-label">
+                <input type="radio" name="robin-parity" value="even" checked> Semaines paires
+              </label>
+              <label class="radio-label">
+                <input type="radio" name="robin-parity" value="odd"> Semaines impaires
+              </label>
+            </div>
+          </div>
+        </div>
 
-      if (isWe) cell.classList.add('weekend');
-      if (isRobin) cell.classList.add('robin');
-      if (isFerie) cell.classList.add('ferie');
-      if (isVac) cell.classList.add('vacances');
-      if (isCP) cell.classList.add('cp');
+        <!-- Section 2 : Ajout de périodes d'exception -->
+        <div class="form-group" style="background: var(--bg-panel); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color);">
+          <label class="form-label" style="color: var(--accent); font-weight: 700; margin-bottom: 8px;">
+            Ajouter une période spécifique
+          </label>
 
-      let labelText = '';
-      if (isCP) labelText = 'CP';
-      else if (isFerie) labelText = 'Férié';
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; gap: 8px;">
+              <div style="flex: 1;">
+                <span class="form-label">Début</span>
+                <input type="date" id="period-start" class="inspection-notes" style="min-height: auto; padding: 6px;">
+              </div>
+              <div style="flex: 1;">
+                <span class="form-label">Fin</span>
+                <input type="date" id="period-end" class="inspection-notes" style="min-height: auto; padding: 6px;">
+              </div>
+            </div>
 
-      cell.innerHTML = `
-        <span class="day-number">${day}</span>
-        <span class="day-tag">${labelText}</span>
-      `;
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+              <div class="radio-group">
+                <label class="radio-label">
+                  <input type="radio" name="period-type" value="presence" checked> Présence
+                </label>
+                <label class="radio-label">
+                  <input type="radio" name="period-type" value="absence"> Absence
+                </label>
+              </div>
+              <button type="button" class="btn-action" style="background: var(--accent); color: #000; border: none; font-weight: 600;" onclick="addRobinPeriod()">
+                + Ajouter
+              </button>
+            </div>
+          </div>
+        </div>
 
-      cell.onclick = () => toggleCP(dateStr, isWe, isFerie);
-      grid.appendChild(cell);
+        <!-- Section 3 : Liste des exceptions configurées -->
+        <div class="form-group">
+          <label class="form-label">Périodes personnalisées enregistrées :</label>
+          <div id="robin-periods-list" style="display: flex; flex-direction: column; gap: 6px; max-height: 140px; overflow-y: auto;">
+            <!-- Les périodes s'afficheront ici dynamiquement -->
+          </div>
+        </div>
+      </div>
+
+      <div class="inspection-footer">
+        <button class="btn-cancel" onclick="closeRobinSettings()">Annuler</button>
+        <button class="btn-save" onclick="saveRobinSettings()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Configuration globale
+    let robinConfig = {
+      enableAlternate: true,
+      parity: 'even',
+      customPeriods: []
+    };
+
+    function openRobinSettings() {
+      document.getElementById('robin-settings-overlay').classList.add('visible');
+      renderPeriodsList();
     }
 
-    card.appendChild(grid);
-    return card;
-  }
-
-  function toggleCP(dateStr, isWe, isFerie) {
-    if (cpPosed[dateStr]) {
-      delete cpPosed[dateStr];
-    } else {
-      cpPosed[dateStr] = true;
+    function closeRobinSettings() {
+      document.getElementById('robin-settings-overlay').classList.remove('visible');
     }
-    localStorage.setItem('cp_posed_dates', JSON.stringify(cpPosed));
-    render();
-  }
 
-  function updateCounters() {
-    const cpN1 = parseFloat(document.getElementById('cpN1').value) || 0;
-    const cpN = parseFloat(document.getElementById('cpN').value) || 0;
-    const totalInitial = cpN1 + cpN;
+    function toggleAlternateSettings() {
+      const enabled = document.getElementById('robin-enable-alternate').checked;
+      document.getElementById('alternate-options').style.opacity = enabled ? '1' : '0.4';
+      document.querySelectorAll('input[name="robin-parity"]').forEach(r => r.disabled = !enabled);
+    }
 
-    let decompte = 0;
-    Object.keys(cpPosed).forEach(dateStr => {
-      const d = new Date(dateStr);
-      const year = d.getFullYear();
-      const isWe = d.getDay() === 0 || d.getDay() === 6;
-      const isFerie = getFeries(year).includes(dateStr);
+    function addRobinPeriod() {
+      const start = document.getElementById('period-start').value;
+      const end = document.getElementById('period-end').value;
+      const type = document.querySelector('input[name="period-type"]:checked').value;
 
-      // Décompte uniquement les jours ouvrés
-      if (!isWe && !isFerie) {
-        decompte += 1;
+      if (!start || !end) {
+        alert("Veuillez sélectionner une date de début et de fin.");
+        return;
       }
-    });
 
-    document.getElementById('totalPose').textContent = `${decompte} j`;
-    document.getElementById('soldeRestant').textContent = `${totalInitial - decompte} j`;
-  }
-
-  function render() {
-    const container = document.getElementById('calendarView');
-    container.innerHTML = '';
-
-    const label = document.getElementById('currentPeriodLabel');
-
-    if (currentMonth === -1) {
-      label.textContent = `Année ${currentYear}`;
-      container.className = 'view-container year-grid';
-      for (let m = 0; m < 12; m++) {
-        container.appendChild(renderMonthGrid(currentYear, m));
+      if (start > end) {
+        alert("La date de début doit être antérieure à la date de fin.");
+        return;
       }
-    } else {
-      const monthNames = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
-      label.textContent = `${monthNames[currentMonth]} ${currentYear}`;
-      container.className = 'view-container single-month-view';
-      container.appendChild(renderMonthGrid(currentYear, currentMonth));
+
+      robinConfig.customPeriods.push({
+        id: Date.now(),
+        start: start,
+        end: end,
+        type: type
+      });
+
+      document.getElementById('period-start').value = '';
+      document.getElementById('period-end').value = '';
+      renderPeriodsList();
     }
 
-    updateCounters();
-  }
+    function removeRobinPeriod(id) {
+      robinConfig.customPeriods = robinConfig.customPeriods.filter(p => p.id !== id);
+      renderPeriodsList();
+    }
 
-  // Initialisation
-  initControls();
-  render();
-</script>
+    function renderPeriodsList() {
+      const container = document.getElementById('robin-periods-list');
+      container.innerHTML = '';
 
+      if (robinConfig.customPeriods.length === 0) {
+        container.innerHTML = '<span style="font-size: 0.75rem; color: var(--text-muted);">Aucune période d\'exception ajoutée.</span>';
+        return;
+      }
+
+      robinConfig.customPeriods.forEach(p => {
+        const item = document.createElement('div');
+        item.style.cssText = 'display: flex; justify-content: space-between; align-items: center; background: #141414; border: 1px solid #333; padding: 6px 10px; border-radius: 4px; font-size: 0.8rem;';
+        
+        const badgeColor = p.type === 'presence' ? '#22c55e' : '#ef4444';
+        const badgeText = p.type === 'presence' ? 'Présence' : 'Absence';
+
+        item.innerHTML = `
+          <span>Du <b>${p.start}</b> au <b>${p.end}</b></span>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="color: ${badgeColor}; font-weight: 700; font-size: 0.75rem;">${badgeText}</span>
+            <button onclick="removeRobinPeriod(${p.id})" style="background: none; border: none; color: #888; cursor: pointer;">✕</button>
+          </div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function saveRobinSettings() {
+      robinConfig.enableAlternate = document.getElementById('robin-enable-alternate').checked;
+      robinConfig.parity = document.querySelector('input[name="robin-parity"]:checked').value;
+      
+      closeRobinSettings();
+      
+      if (typeof updateCalendarDisplay === 'function') {
+        updateCalendarDisplay();
+      }
+    }
+  </script>
 </body>
 </html>
