@@ -37,16 +37,11 @@
 
     header {
       display: flex;
-      justify-content: space-between;
+      justify-content: flex-end;
       align-items: center;
-      padding-bottom: 20px;
-      border-bottom: 1px solid var(--border);
+      padding-bottom: 10px;
       margin-bottom: 20px;
-      flex-wrap: wrap;
-      gap: 10px;
     }
-
-    h1 { font-size: 1.4rem; color: #fff; }
 
     /* Controls & Options Bar */
     .toolbar {
@@ -98,6 +93,8 @@
     .btn-icon { padding: 6px 10px; font-size: 1rem; }
     .btn-active { background: var(--accent); color: #000; font-weight: 700; border-color: var(--accent); }
     .btn-active:hover { background: #e07b00; border-color: #e07b00; }
+    .btn-validate { background: #238636; color: #fff; font-weight: 700; border-color: #238636; }
+    .btn-validate:hover { background: #2ea043; border-color: #2ea043; }
 
     /* Legend */
     .legend {
@@ -219,16 +216,14 @@
     .mini-day:hover { border-color: var(--accent); }
     .mini-day.empty { background: transparent; border-color: transparent; cursor: default; }
 
-    /* Visual States */
+    /* Visual States (Couleurs unies uniquement, pas de dégradés ni de bordures couleur) */
     .day.is-weekend, .mini-day.is-weekend { background: var(--color-weekend); }
     .day.is-ferie, .mini-day.is-ferie { background: var(--color-ferie); }
-    .day.is-vacances, .mini-day.is-vacances { border-left: 3px solid #388bfd; background: linear-gradient(135deg, var(--color-vacances-zoneB) 0%, var(--bg-panel) 100%); }
+    .day.is-vacances, .mini-day.is-vacances { background: var(--color-vacances-zoneB); }
+    .day.is-garde-we, .mini-day.is-garde-we { background: var(--color-garde); color: #000; }
     .day.is-conge, .mini-day.is-conge { background: var(--color-conge) !important; color: #fff; font-weight: 700; }
-    .day.is-garde-we, .mini-day.is-garde-we { border: 2px solid var(--color-garde); }
 
     .badge-conge { background: #fff; color: var(--color-conge); }
-    .badge-garde { background: var(--color-garde); color: #000; }
-    .badge-ferie { background: #ff7b72; color: #000; }
 
     /* Dashboard CP Counter */
     .cp-dashboard {
@@ -264,7 +259,7 @@
     .cp-value { font-size: 1.3rem; font-weight: 700; color: #fff; }
     .cp-value.highlight { color: var(--accent); }
 
-    /* Modal Overlay */
+    /* Modals Overlay */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -312,17 +307,29 @@
       border-top: 1px solid var(--border);
       padding-top: 15px;
     }
+
+    /* Liste des CP Posés */
+    .cp-list {
+      max-height: 250px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .cp-list-item {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
   </style>
 </head>
 <body>
-
-  <header>
-    <h1>🌴 Planificateur de Vacances (Zone B)</h1>
-    <div style="display: flex; gap: 10px;">
-      <button class="btn" onclick="exportData()">💾 Exporter</button>
-      <button class="btn" onclick="importData()">📂 Importer</button>
-    </div>
-  </header>
 
   <!-- Options et Filtres -->
   <div class="toolbar">
@@ -341,7 +348,7 @@
     </div>
 
     <div class="toolbar-right">
-      <span style="font-size: 0.85rem; color: var(--text-muted);">Clique sur un jour pour poser/retirer un congé</span>
+      <button class="btn btn-validate" onclick="openCpSummaryModal()">✔ Valider mes CP</button>
     </div>
   </div>
 
@@ -350,7 +357,7 @@
     <div class="legend-item"><div class="legend-box" style="background: var(--color-weekend);"></div> Week-end</div>
     <div class="legend-item"><div class="legend-box" style="background: var(--color-ferie);"></div> Jour Férié</div>
     <div class="legend-item"><div class="legend-box" style="background: var(--color-vacances-zoneB);"></div> Vacances Zone B</div>
-    <div class="legend-item"><div class="legend-box" style="border: 2px solid var(--color-garde);"></div> Garde Robin</div>
+    <div class="legend-item"><div class="legend-box" style="background: var(--color-garde);"></div> Garde Robin</div>
     <div class="legend-item"><div class="legend-box" style="background: var(--color-conge);"></div> Congé Posé</div>
   </div>
 
@@ -479,6 +486,25 @@
     </div>
   </div>
 
+  <!-- Modale Liste des CP Posés -->
+  <div id="cpSummaryModal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">📋 Récapitulatif des Congés Posés</span>
+        <button class="modal-close" onclick="closeCpSummaryModal()">✕</button>
+      </div>
+
+      <div class="form-group">
+        <span class="form-label" id="cpSummaryCount" style="color: var(--accent); font-weight: 700; font-size: 0.9rem;"></span>
+        <div id="cpSummaryList" class="cp-list" style="margin-top: 8px;"></div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-validate" onclick="closeCpSummaryModal()">Fermer</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     let currentDate = new Date();
     let viewMode = 'month'; // 'month' ou 'year'
@@ -493,6 +519,7 @@
     };
 
     const monthNames = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
+    const dayNames = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
 
     // Calcul dynamique des jours fériés français
     function getJoursFeries(year) {
@@ -517,7 +544,7 @@
       return [...feries, fmt(lundiPaques), fmt(ascension), fmt(lundiPentecote)];
     }
 
-    // Vacances Scolaires Zone B (Exemples d'intervalles)
+    // Vacances Scolaires Zone B
     const vacancesZoneB = [
       { start: "2026-02-07", end: "2026-02-23" },
       { start: "2026-04-04", end: "2026-04-20" },
@@ -560,7 +587,6 @@
       cpConfig.n = parseFloat(document.getElementById('inputCpN').value) || 0;
       localStorage.setItem('my_cp_config', JSON.stringify(cpConfig));
 
-      // Calcul uniquement sur les jours ouvrés
       let totalOuvresPoses = 0;
       congesPoses.forEach(dStr => {
         if (isJourOuvreEffective(dStr)) {
@@ -570,7 +596,6 @@
 
       document.getElementById('totalCongesPoses').innerText = `${totalOuvresPoses} jour(s)`;
 
-      // Consommation prioritaire CP N-1 puis CP N
       let restantN1 = Math.max(0, cpConfig.n1 - totalOuvresPoses);
       let resteAImputerN = Math.max(0, totalOuvresPoses - cpConfig.n1);
       let restantN = Math.max(0, cpConfig.n - resteAImputerN);
@@ -679,8 +704,6 @@
 
         let labelsHTML = '';
         if (isConge) labelsHTML += `<span class="day-label badge-conge">Congé</span>`;
-        if (isFerie) labelsHTML += `<span class="day-label badge-ferie">Férié</span>`;
-        if (isGarde) labelsHTML += `<span class="day-label badge-garde">Robin</span>`;
 
         cell.innerHTML = `
           <span class="day-number">${day}</span>
@@ -804,7 +827,7 @@
 
       gardeConfig.customPeriods.forEach(p => {
         const div = document.createElement('div');
-        div.style.cssText = 'display:flex; justify-space-between; align-items:center; background:var(--bg-input); border:1px solid var(--border); padding:6px 10px; border-radius:4px; font-size:0.8rem;';
+        div.style.cssText = 'display:flex; justify-content:space-between; align-items:center; background:var(--bg-input); border:1px solid var(--border); padding:6px 10px; border-radius:4px; font-size:0.8rem;';
         const color = p.type === 'presence' ? 'var(--color-presence)' : 'var(--color-absence)';
         const label = p.type === 'presence' ? 'Présence' : 'Absence';
         div.innerHTML = `
@@ -826,48 +849,46 @@
       renderCalendar();
     }
 
-    /* Export / Import */
-    function exportData() {
-      const payload = { congesPoses, cpConfig, gardeConfig };
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload));
-      const anchor = document.createElement('a');
-      anchor.setAttribute("href", dataStr);
-      anchor.setAttribute("download", "sauvegarde_vacances.json");
-      document.body.appendChild(anchor);
-      anchor.click();
-      anchor.remove();
+    /* Modal Récapitulatif CP Posés */
+    function openCpSummaryModal() {
+      const listContainer = document.getElementById('cpSummaryList');
+      listContainer.innerHTML = '';
+
+      const sortedDates = [...congesPoses].sort();
+      let totalOuvres = 0;
+
+      if (sortedDates.length === 0) {
+        listContainer.innerHTML = '<div style="color:var(--text-muted); font-size:0.85rem; text-align:center; padding:10px;">Aucun congé posé.</div>';
+        document.getElementById('cpSummaryCount').innerText = 'Total : 0 jour ouvré posé';
+      } else {
+        sortedDates.forEach(dateStr => {
+          const parts = dateStr.split('-');
+          const d = new Date(parts[0], parts[1] - 1, parts[2]);
+          const isOuvre = isJourOuvreEffective(dateStr);
+          
+          if (isOuvre) totalOuvres++;
+
+          const formattedDate = `${dayNames[d.getDay()]} ${parts[2]} ${monthNames[d.getMonth()]} ${parts[0]}`;
+          
+          const item = document.createElement('div');
+          item.className = 'cp-list-item';
+          item.innerHTML = `
+            <span>${formattedDate}</span>
+            <span style="font-size:0.75rem; font-weight:700; color:${isOuvre ? 'var(--accent)' : 'var(--text-muted)'};">
+              ${isOuvre ? 'Décompté (Ouvré)' : 'Non décompté (W-E / Férié)'}
+            </span>
+          `;
+          listContainer.appendChild(item);
+        });
+
+        document.getElementById('cpSummaryCount').innerText = `Total : ${sortedDates.length} jour(s) sélectionné(s) — dont ${totalOuvres} jour(s) ouvré(s) décompté(s)`;
+      }
+
+      document.getElementById('cpSummaryModal').classList.add('visible');
     }
 
-    function importData() {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = '.json';
-      input.onchange = e => {
-        const file = e.target.files[0];
-        const reader = new FileReader();
-        reader.readAsText(file, 'UTF-8');
-        reader.onload = ev => {
-          try {
-            const data = JSON.parse(ev.target.result);
-            if (data.congesPoses) congesPoses = data.congesPoses;
-            if (data.cpConfig) cpConfig = data.cpConfig;
-            if (data.gardeConfig) gardeConfig = data.gardeConfig;
-
-            localStorage.setItem('my_conges_dates', JSON.stringify(congesPoses));
-            localStorage.setItem('my_cp_config', JSON.stringify(cpConfig));
-            localStorage.setItem('my_garde_config', JSON.stringify(gardeConfig));
-
-            document.getElementById('inputCpN1').value = cpConfig.n1;
-            document.getElementById('inputCpN').value = cpConfig.n;
-
-            renderCalendar();
-            updateCPData();
-          } catch(err) {
-            alert("Fichier JSON invalide.");
-          }
-        }
-      }
-      input.click();
+    function closeCpSummaryModal() {
+      document.getElementById('cpSummaryModal').classList.remove('visible');
     }
 
     window.onload = function() {
