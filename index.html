@@ -3,49 +3,82 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gestion des Congés</title>
+  <title>Planificateur de Vacances & CP</title>
   <style>
     :root {
-      --bg-weekend: #e2e8f0;
-      --text-weekend: #475569;
+      --bg-weekend: #cbd5e1;
+      --text-weekend: #334155;
+      --bg-robin: #c084fc;
+      --text-robin: #ffffff;
       --bg-ferie: #fef08a;
       --text-ferie: #854d0e;
-      --bg-cp: #bfdbfe;
-      --text-cp: #1e40af;
+      --bg-vacances: #f1f5f9;
+      --border-vacances: #38bdf8;
+      --bg-cp: #60a5fa;
+      --text-cp: #ffffff;
       --primary: #2563eb;
     }
 
+    * { box-sizing: border-box; }
     body {
       font-family: system-ui, -apple-system, sans-serif;
       margin: 0;
-      padding: 20px;
+      padding: 16px;
       background-color: #f8fafc;
       color: #0f172a;
     }
 
     .container {
-      max-width: 1000px;
+      max-width: 1200px;
       margin: 0 auto;
       background: white;
-      padding: 24px;
+      padding: 20px;
       border-radius: 12px;
       box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
     }
 
-    h1 {
-      margin-top: 0;
-      color: #1e293b;
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #e2e8f0;
     }
 
-    /* Section Compteur CP */
+    .controls-main {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    button, select {
+      padding: 8px 14px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      background: #fff;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    button.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    /* Trackers CP */
     .cp-tracker {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
       background: #f1f5f9;
       padding: 16px;
       border-radius: 8px;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
     }
 
     .input-group {
@@ -55,13 +88,13 @@
     }
 
     .input-group label {
-      font-size: 0.875rem;
+      font-size: 0.8rem;
       font-weight: 600;
       color: #475569;
     }
 
     .input-group input {
-      padding: 8px 12px;
+      padding: 6px 10px;
       border: 1px solid #cbd5e1;
       border-radius: 6px;
       font-size: 1rem;
@@ -69,7 +102,7 @@
 
     .balance-card {
       background: #ffffff;
-      padding: 12px 16px;
+      padding: 10px 14px;
       border-radius: 6px;
       border: 1px solid #e2e8f0;
       display: flex;
@@ -77,114 +110,126 @@
       justify-content: center;
     }
 
-    .balance-title {
-      font-size: 0.875rem;
-      color: #475569;
-      font-weight: 600;
-    }
-
-    .balance-value {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: var(--primary);
-    }
+    .balance-title { font-size: 0.8rem; color: #475569; font-weight: 600; }
+    .balance-value { font-size: 1.2rem; font-weight: 700; color: var(--primary); }
 
     /* Légende */
     .legend {
       display: flex;
-      gap: 16px;
+      gap: 12px;
       flex-wrap: wrap;
       margin-bottom: 20px;
+      font-size: 0.85rem;
     }
 
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.875rem;
+    .legend-item { display: flex; align-items: center; gap: 6px; }
+    .color-box { width: 16px; height: 16px; border-radius: 4px; border: 1px solid rgba(0,0,0,0.1); }
+
+    /* Vues du calendrier */
+    .view-container { display: flex; flex-direction: column; gap: 24px; }
+    
+    .year-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
     }
 
-    .color-box {
-      width: 20px;
-      height: 20px;
-      border-radius: 4px;
+    .month-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px;
+      background: #ffffff;
     }
 
-    .box-weekend { background-color: var(--bg-weekend); border: 1px solid #cbd5e1; }
-    .box-ferie { background-color: var(--bg-ferie); border: 1px solid #fde047; }
-    .box-cp { background-color: var(--bg-cp); border: 1px solid #93c5fd; }
+    .month-title {
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 10px;
+      color: #1e293b;
+      text-transform: capitalize;
+    }
 
-    /* Grille Calendrier */
     .calendar-grid {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
-      gap: 4px;
+      gap: 3px;
     }
 
     .day-header {
-      font-weight: 600;
+      font-size: 0.75rem;
+      font-weight: 700;
       text-align: center;
-      padding: 8px;
-      background: #f1f5f9;
-      border-radius: 4px;
-      font-size: 0.875rem;
+      padding: 4px;
+      color: #64748b;
     }
 
     .day-cell {
-      min-height: 60px;
-      padding: 6px;
-      border: 1px solid #e2e8f0;
+      min-height: 48px;
+      padding: 4px;
+      border: 1px solid #f1f5f9;
       border-radius: 4px;
       cursor: pointer;
       user-select: none;
-      transition: background-color 0.2s;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+      position: relative;
     }
 
-    .day-number {
-      font-weight: 600;
-      font-size: 0.875rem;
-    }
+    .day-number { font-size: 0.8rem; font-weight: 600; }
+    .day-tag { font-size: 0.65rem; font-weight: 700; text-align: right; }
 
-    .day-label {
-      font-size: 0.75rem;
-      font-weight: bold;
-      align-self: flex-end;
-    }
+    /* Couleurs des états */
+    .day-cell.weekend { background-color: var(--bg-weekend); color: var(--text-weekend); }
+    .day-cell.robin { background-color: var(--bg-robin) !important; color: var(--text-robin) !important; }
+    .day-cell.ferie { background-color: var(--bg-ferie) !important; color: var(--text-ferie) !important; }
+    .day-cell.vacances { border-bottom: 3px solid var(--border-vacances); }
+    .day-cell.cp { background-color: var(--bg-cp) !important; color: var(--text-cp) !important; }
 
-    /* Style des types de jours (Coloration complète de la case) */
-    .day-cell.weekend {
-      background-color: var(--bg-weekend) !important;
-      color: var(--text-weekend);
-    }
-
-    .day-cell.ferie {
-      background-color: var(--bg-ferie) !important;
-      color: var(--text-ferie);
-    }
-
-    .day-cell.cp {
-      background-color: var(--bg-cp) !important;
-      color: var(--text-cp);
-    }
+    .single-month-view .day-cell { min-height: 80px; }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <h1>Mes vacances</h1>
+  <header>
+    <div class="controls-main">
+      <button id="btnPrev">&lt;</button>
+      <span id="currentPeriodLabel" style="font-weight: 700; font-size: 1.2rem;"></span>
+      <button id="btnNext">&gt;</button>
+      
+      <select id="yearSelect"></select>
+      <select id="monthSelect">
+        <option value="-1">Vue Annuelle</option>
+        <option value="0">Janvier</option>
+        <option value="1">Février</option>
+        <option value="2">Mars</option>
+        <option value="3">Avril</option>
+        <option value="4">Mai</option>
+        <option value="5">Juin</option>
+        <option value="6">Juillet</option>
+        <option value="7">Août</option>
+        <option value="8">Septembre</option>
+        <option value="9">Octobre</option>
+        <option value="10">Novembre</option>
+        <option value="11">Décembre</option>
+      </select>
+    </div>
 
-  <!-- Suivi des CP N-1 et CP N -->
+    <div>
+      <button id="btnToggleRobin">Week-end Robin (1/2)</button>
+    </div>
+  </header>
+
+  <!-- Décompte Congés -->
   <div class="cp-tracker">
     <div class="input-group">
       <label for="cpN1">Solde CP N-1</label>
-      <input type="number" id="cpN1" value="5" min="0" step="0.5" onchange="updateCounters()">
+      <input type="number" id="cpN1" value="0" min="0" step="0.5">
     </div>
     <div class="input-group">
       <label for="cpN">Solde CP N</label>
-      <input type="number" id="cpN" value="25" min="0" step="0.5" onchange="updateCounters()">
+      <input type="number" id="cpN" value="25" min="0" step="0.5">
     </div>
     <div class="balance-card">
       <span class="balance-title">CP Posés (décomptés)</span>
@@ -192,104 +237,192 @@
     </div>
     <div class="balance-card">
       <span class="balance-title">Solde CP Restant</span>
-      <span class="balance-value" id="soldeRestant">30 j</span>
+      <span class="balance-value" id="soldeRestant">25 j</span>
     </div>
   </div>
 
   <!-- Légende -->
   <div class="legend">
-    <div class="legend-item">
-      <div class="color-box box-weekend"></div>
-      <span>Week-end Robin</span>
-    </div>
-    <div class="legend-item">
-      <div class="color-box box-ferie"></div>
-      <span>Jour férié</span>
-    </div>
-    <div class="legend-item">
-      <div class="color-box box-cp"></div>
-      <span>CP</span>
-    </div>
+    <div class="legend-item"><div class="color-box" style="background: var(--bg-weekend);"></div> Weekend</div>
+    <div class="legend-item"><div class="color-box" style="background: var(--bg-robin);"></div> Week-end Robin</div>
+    <div class="legend-item"><div class="color-box" style="background: var(--bg-ferie);"></div> Jour férié</div>
+    <div class="legend-item"><div class="color-box" style="border-bottom: 3px solid var(--border-vacances);"></div> Vacances Zone B</div>
+    <div class="legend-item"><div class="color-box" style="background: var(--bg-cp);"></div> CP Posé</div>
   </div>
 
-  <!-- Grille du Calendrier -->
-  <div class="calendar-grid" id="calendar">
-    <div class="day-header">Lun</div>
-    <div class="day-header">Mar</div>
-    <div class="day-header">Mer</div>
-    <div class="day-header">Jeu</div>
-    <div class="day-header">Ven</div>
-    <div class="day-header">Sam</div>
-    <div class="day-header">Dim</div>
-    <!-- Les jours sont générés via JavaScript -->
-  </div>
+  <div id="calendarView" class="view-container"></div>
 </div>
 
 <script>
-  // Simulation de jours de test
-  const daysData = [
-    { day: 1, isWeekend: false, isFerie: false },
-    { day: 2, isWeekend: false, isFerie: false },
-    { day: 3, isWeekend: false, isFerie: false },
-    { day: 4, isWeekend: false, isFerie: false },
-    { day: 5, isWeekend: false, isFerie: false },
-    { day: 6, isWeekend: true,  isFerie: false },
-    { day: 7, isWeekend: true,  isFerie: false },
-    { day: 8, isWeekend: false, isFerie: false },
-    { day: 9, isWeekend: false, isFerie: false },
-    { day: 10, isWeekend: false, isFerie: false },
-    { day: 11, isWeekend: false, isFerie: false },
-    { day: 12, isWeekend: false, isFerie: false },
-    { day: 13, isWeekend: true,  isFerie: false },
-    { day: 14, isWeekend: true,  isFerie: false },
-    { day: 15, isWeekend: false, isFerie: true }, // 15 Jour Férié
-    { day: 16, isWeekend: false, isFerie: false },
-    { day: 17, isWeekend: false, isFerie: false },
-    { day: 18, isWeekend: false, isFerie: false },
-    { day: 19, isWeekend: false, isFerie: false },
-    { day: 20, isWeekend: true,  isFerie: false },
-    { day: 21, isWeekend: true,  isFerie: false },
-  ];
+  let currentYear = new Date().getFullYear();
+  let currentMonth = -1; // -1 = Année complète
+  let robinActive = true;
+  let cpPosed = JSON.parse(localStorage.getItem('cp_posed_dates') || '{}');
 
-  const state = {};
+  // Référence 1/2 weekend Robin (Date d'un samedi de garde)
+  const robinRefSaturday = new Date(2026, 8, 5); // 5 Septembre 2026
 
-  function renderCalendar() {
-    const grid = document.getElementById('calendar');
+  // Définition Jours Fériés de base
+  function getFeries(year) {
+    const feries = [
+      `${year}-01-01`, `${year}-05-01`, `${year}-05-08`, 
+      `${year}-07-14`, `${year}-08-15`, `${year}-11-01`, 
+      `${year}-11-11`, `${year}-12-25`
+    ];
+    // Calcul Pâques & Ascension
+    const a = year % 19, b = Math.floor(year / 100), c = year % 100;
+    const d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25);
+    const g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30;
+    const i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7;
+    const m = Math.floor((a + 11 * h + 22 * l) / 451);
+    const month = Math.floor((h + l - 7 * m + 114) / 31) - 1;
+    const day = ((h + l - 7 * m + 114) % 31) + 1;
     
-    daysData.forEach(item => {
-      const cell = document.createElement('div');
-      cell.className = 'day-cell';
-      cell.dataset.day = item.day;
-      
-      if (item.isWeekend) cell.classList.add('weekend');
-      if (item.isFerie) cell.classList.add('ferie');
+    const paques = new Date(year, month, day);
+    const lundiPaques = new Date(paques); lundiPaques.setDate(paques.getDate() + 1);
+    const ascension = new Date(paques); ascension.setDate(paques.getDate() + 39);
+    const pentecote = new Date(paques); pentecote.setDate(paques.getDate() + 50);
 
-      cell.innerHTML = `
-        <span class="day-number">${item.day}</span>
-        <span class="day-label" id="label-${item.day}"></span>
-      `;
-
-      cell.onclick = () => toggleCP(item);
-      grid.appendChild(cell);
-    });
+    const formatDate = d => d.toISOString().split('T')[0];
+    feries.push(formatDate(lundiPaques), formatDate(ascension), formatDate(pentecote));
+    return feries;
   }
 
-  function toggleCP(item) {
-    const day = item.day;
-    state[day] = !state[day];
-    
-    const cell = document.querySelector(`[data-day="${day}"]`);
-    const label = document.getElementById(`label-${day}`);
+  // Vacances Scolaires Zone B (Exemple plages 2026-2027)
+  const vacancesZoneB = [
+    { start: '2026-10-17', end: '2026-11-02' },
+    { start: '2026-12-19', end: '2027-01-04' },
+    { start: '2027-02-06', end: '2027-02-22' },
+    { start: '2027-04-03', end: '2027-04-19' },
+    { start: '2027-07-03', end: '2027-09-01' }
+  ];
 
-    if (state[day]) {
-      cell.classList.add('cp');
-      label.textContent = 'CP';
-    } else {
-      cell.classList.remove('cp');
-      label.textContent = '';
+  function isVacances(dateStr) {
+    return vacancesZoneB.some(v => dateStr >= v.start && dateStr <= v.end);
+  }
+
+  function isRobinWeekend(date) {
+    const day = date.getDay();
+    if (day !== 0 && day !== 6) return false;
+    
+    // Calcul de la différence en semaines par rapport au samedi de référence
+    const sat = new Date(date);
+    if (day === 0) sat.setDate(sat.getDate() - 1);
+    const diffWeeks = Math.round((sat - robinRefSaturday) / (7 * 24 * 3600 * 1000));
+    return Math.abs(diffWeeks) % 2 === 0;
+  }
+
+  function initControls() {
+    const yearSel = document.getElementById('yearSelect');
+    for (let y = currentYear - 1; y <= currentYear + 3; y++) {
+      const opt = document.createElement('option');
+      opt.value = y; opt.textContent = y;
+      if (y === currentYear) opt.selected = true;
+      yearSel.appendChild(opt);
     }
 
-    updateCounters();
+    yearSel.onchange = (e) => { currentYear = parseInt(e.target.value); render(); };
+    document.getElementById('monthSelect').onchange = (e) => { currentMonth = parseInt(e.target.value); render(); };
+    
+    document.getElementById('btnPrev').onclick = () => navigate(-1);
+    document.getElementById('btnNext').onclick = () => navigate(1);
+
+    const btnRobin = document.getElementById('btnToggleRobin');
+    btnRobin.onclick = () => {
+      robinActive = !robinActive;
+      btnRobin.classList.toggle('active', robinActive);
+      render();
+    };
+    btnRobin.classList.add('active');
+
+    document.getElementById('cpN1').onchange = updateCounters;
+    document.getElementById('cpN').onchange = updateCounters;
+  }
+
+  function navigate(direction) {
+    if (currentMonth === -1) {
+      currentYear += direction;
+      document.getElementById('yearSelect').value = currentYear;
+    } else {
+      currentMonth += direction;
+      if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+      if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+      document.getElementById('yearSelect').value = currentYear;
+      document.getElementById('monthSelect').value = currentMonth;
+    }
+    render();
+  }
+
+  function renderMonthGrid(year, month) {
+    const card = document.createElement('div');
+    card.className = 'month-card';
+
+    const monthNames = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
+    card.innerHTML = `<div class="month-title">${monthNames[month]} ${year}</div>`;
+
+    const grid = document.createElement('div');
+    grid.className = 'calendar-grid';
+    
+    ['L', 'M', 'M', 'J', 'V', 'S', 'D'].forEach(h => {
+      grid.innerHTML += `<div class="day-header">${h}</div>`;
+    });
+
+    const firstDay = new Date(year, month, 1);
+    let startingDay = firstDay.getDay() - 1;
+    if (startingDay === -1) startingDay = 6;
+
+    const totalDays = new Date(year, month + 1, 0).getDate();
+    const feries = getFeries(year);
+
+    for (let i = 0; i < startingDay; i++) {
+      grid.appendChild(document.createElement('div'));
+    }
+
+    for (let day = 1; day <= totalDays; day++) {
+      const date = new Date(year, month, day);
+      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      
+      const cell = document.createElement('div');
+      cell.className = 'day-cell';
+      cell.dataset.date = dateStr;
+
+      const isWe = date.getDay() === 0 || date.getDay() === 6;
+      const isFerie = feries.includes(dateStr);
+      const isVac = isVacances(dateStr);
+      const isRobin = robinActive && isRobinWeekend(date);
+      const isCP = cpPosed[dateStr];
+
+      if (isWe) cell.classList.add('weekend');
+      if (isRobin) cell.classList.add('robin');
+      if (isFerie) cell.classList.add('ferie');
+      if (isVac) cell.classList.add('vacances');
+      if (isCP) cell.classList.add('cp');
+
+      let labelText = '';
+      if (isCP) labelText = 'CP';
+      else if (isFerie) labelText = 'Férié';
+
+      cell.innerHTML = `
+        <span class="day-number">${day}</span>
+        <span class="day-tag">${labelText}</span>
+      `;
+
+      cell.onclick = () => toggleCP(dateStr, isWe, isFerie);
+      grid.appendChild(cell);
+    }
+
+    card.appendChild(grid);
+    return card;
+  }
+
+  function toggleCP(dateStr, isWe, isFerie) {
+    if (cpPosed[dateStr]) {
+      delete cpPosed[dateStr];
+    } else {
+      cpPosed[dateStr] = true;
+    }
+    localStorage.setItem('cp_posed_dates', JSON.stringify(cpPosed));
+    render();
   }
 
   function updateCounters() {
@@ -297,26 +430,48 @@
     const cpN = parseFloat(document.getElementById('cpN').value) || 0;
     const totalInitial = cpN1 + cpN;
 
-    let decompteCP = 0;
+    let decompte = 0;
+    Object.keys(cpPosed).forEach(dateStr => {
+      const d = new Date(dateStr);
+      const year = d.getFullYear();
+      const isWe = d.getDay() === 0 || d.getDay() === 6;
+      const isFerie = getFeries(year).includes(dateStr);
 
-    daysData.forEach(item => {
-      if (state[item.day]) {
-        // Seuls les jours ouvrés (ni week-end ni fériés) décomptent des CP
-        if (!item.isWeekend && !item.isFerie) {
-          decompteCP += 1;
-        }
+      // Décompte uniquement les jours ouvrés
+      if (!isWe && !isFerie) {
+        decompte += 1;
       }
     });
 
-    const soldeRestant = totalInitial - decompteCP;
+    document.getElementById('totalPose').textContent = `${decompte} j`;
+    document.getElementById('soldeRestant').textContent = `${totalInitial - decompte} j`;
+  }
 
-    document.getElementById('totalPose').textContent = `${decompteCP} j`;
-    document.getElementById('soldeRestant').textContent = `${soldeRestant} j`;
+  function render() {
+    const container = document.getElementById('calendarView');
+    container.innerHTML = '';
+
+    const label = document.getElementById('currentPeriodLabel');
+
+    if (currentMonth === -1) {
+      label.textContent = `Année ${currentYear}`;
+      container.className = 'view-container year-grid';
+      for (let m = 0; m < 12; m++) {
+        container.appendChild(renderMonthGrid(currentYear, m));
+      }
+    } else {
+      const monthNames = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
+      label.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+      container.className = 'view-container single-month-view';
+      container.appendChild(renderMonthGrid(currentYear, currentMonth));
+    }
+
+    updateCounters();
   }
 
   // Initialisation
-  renderCalendar();
-  updateCounters();
+  initControls();
+  render();
 </script>
 
 </body>
