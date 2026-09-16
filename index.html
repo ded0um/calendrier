@@ -3,423 +3,283 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tableau de Bord & Planning Robin</title>
+  <title>Planificateur de Vacances & Garde</title>
   <style>
     :root {
-      --bg-main: #000000;
-      --bg-card: #0b0b0b;
-      --bg-panel: #111111;
-      --bg-input: #141414;
+      --bg-main: #0d1117;
+      --bg-card: #161b22;
+      --bg-panel: #21262d;
+      --border: #30363d;
+      --text-main: #c9d1d9;
+      --text-muted: #8b949e;
       --accent: #ff8c00;
-      --border-color: #333333;
-      --text-main: #f5f5f5;
-      --text-muted: #888888;
-      --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      
+      --color-weekend: #1c2128;
+      --color-ferie: #702a00;
+      --color-vacances-zoneB: #0d3868;
+      --color-conge: #1f6beb;
+      --color-garde: #e3b341;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       background-color: var(--bg-main);
       color: var(--text-main);
-      font-family: var(--font-family);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
     }
 
-    /* Top bar */
-    .header-bar {
+    header {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    h1 { font-size: 1.4rem; color: #fff; }
+
+    /* Controls & Options Bar */
+    .toolbar {
+      display: flex;
+      gap: 15px;
       background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      padding: 15px 20px;
+      padding: 15px;
+      border: 1px solid var(--border);
       border-radius: 8px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      align-items: center;
     }
 
-    .title {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: var(--text-main);
+    .toolbar-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
     }
 
-    /* Buttons */
-    .btn-action {
+    input[type="checkbox"] {
+      accent-color: var(--accent);
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+
+    .btn {
       background: var(--bg-panel);
       color: var(--text-main);
-      border: 1px solid var(--border-color);
-      padding: 8px 16px;
+      border: 1px solid var(--border);
+      padding: 6px 12px;
       border-radius: 6px;
       cursor: pointer;
-      font-family: inherit;
-      font-size: 0.9rem;
-      transition: background 0.2s, border-color 0.2s;
+      font-size: 0.85rem;
+      transition: background 0.2s;
     }
 
-    .btn-action:hover {
-      border-color: var(--accent);
-      background: #181818;
-    }
+    .btn:hover { background: #30363d; }
+    .btn-accent { background: var(--accent); color: #000; font-weight: 600; border: none; }
 
-    .btn-save {
-      background: var(--accent);
-      color: #000000;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 6px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    .btn-cancel {
-      background: transparent;
-      color: var(--text-muted);
-      border: 1px solid var(--border-color);
-      padding: 8px 16px;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
-    /* Dashboard Layout */
-    .dashboard-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 20px;
-    }
-
-    .card {
+    /* Legend */
+    .legend {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      font-size: 0.8rem;
+      margin-bottom: 15px;
       background: var(--bg-card);
-      border: 1px solid var(--border-color);
+      padding: 10px 15px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+
+    .legend-item { display: flex; align-items: center; gap: 6px; }
+    .legend-box { width: 14px; height: 14px; border-radius: 3px; border: 1px solid var(--border); }
+
+    /* Calendar Grid */
+    .calendar-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
       border-radius: 8px;
       padding: 20px;
     }
 
-    .card-header {
+    .calendar-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 20px;
+      margin-bottom: 15px;
     }
 
-    .card-title {
-      font-size: 1.1rem;
-      color: var(--accent);
-      font-weight: 600;
-    }
+    .month-title { font-size: 1.2rem; font-weight: 700; color: #fff; text-transform: capitalize; }
 
-    /* Calendar Component */
-    .calendar-controls {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
-
-    .month-title {
-      font-weight: 700;
-      font-size: 1rem;
-      min-width: 140px;
-      text-align: center;
-      text-transform: capitalize;
-    }
-
-    .calendar-grid {
+    .grid-weekdays, .grid-days {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
       gap: 6px;
     }
 
-    .calendar-day-header {
+    .weekday {
       text-align: center;
       font-size: 0.8rem;
-      font-weight: 700;
+      font-weight: 600;
       color: var(--text-muted);
-      padding: 8px 0;
+      padding: 6px 0;
     }
 
-    .calendar-day {
+    .day {
       background: var(--bg-panel);
-      border: 1px solid var(--border-color);
+      border: 1px solid var(--border);
       border-radius: 6px;
-      min-height: 70px;
-      padding: 6px;
+      min-height: 85px;
+      padding: 8px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+      cursor: pointer;
+      user-select: none;
+      transition: border-color 0.15s, transform 0.1s;
       position: relative;
     }
 
-    .calendar-day.empty {
-      background: transparent;
-      border-color: transparent;
-    }
+    .day:hover { border-color: var(--accent); }
+    .day.empty { background: transparent; border-color: transparent; cursor: default; }
 
-    .day-number {
-      font-size: 0.85rem;
-      font-weight: 600;
-    }
+    .day-number { font-size: 0.85rem; font-weight: 700; }
+    .day-label { font-size: 0.65rem; font-weight: 600; border-radius: 3px; padding: 2px 4px; text-align: center; line-height: 1.1; margin-top: 2px; }
 
-    .day-badge {
-      font-size: 0.65rem;
-      font-weight: 700;
-      padding: 2px 4px;
-      border-radius: 3px;
-      text-align: center;
-      text-transform: uppercase;
-    }
+    /* Distinctive States */
+    .day.is-weekend { background: var(--color-weekend); }
+    .day.is-ferie { background: var(--color-ferie); }
+    .day.is-vacances { border-left: 4px solid #388bfd; background: linear-gradient(135deg, var(--color-vacances-zoneB) 0%, var(--bg-panel) 100%); }
+    .day.is-conge { background: var(--color-conge) !important; color: #fff; }
+    .day.is-garde-we { border: 2px solid var(--color-garde); }
 
-    /* Highlight style for Robin presence */
-    .calendar-day.robin-present {
-      border-color: var(--accent);
-      background: rgba(255, 140, 0, 0.08);
-    }
+    .badge-conge { background: #fff; color: var(--color-conge); }
+    .badge-garde { background: var(--color-garde); color: #000; }
+    .badge-ferie { background: #ff7b72; color: #000; }
 
-    .calendar-day.robin-present .day-badge {
-      background: var(--accent);
-      color: #000;
-    }
-
-    /* Overlay & Modal Windows */
-    .inspection-overlay {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(0, 0, 0, 0.85);
-      backdrop-filter: blur(4px);
-      z-index: 1000;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .inspection-overlay.visible {
-      display: flex;
-    }
-
-    .inspection-panel {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      width: 90%;
-      max-width: 520px;
-      padding: 20px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    }
-
-    .inspection-header {
+    /* Counter Footer */
+    .counter-bar {
+      margin-top: 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 15px;
-      border-bottom: 1px solid var(--border-color);
-      padding-bottom: 10px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 15px;
+      border-radius: 8px;
     }
 
-    .inspection-title {
-      font-weight: 700;
-      font-size: 1rem;
-    }
-
-    .inspection-close {
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      font-size: 1.2rem;
-      cursor: pointer;
-    }
-
-    .inspection-body {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-    }
-
-    .inspection-footer {
-      display: flex;
-      justify-content: flex-end;
-      gap: 10px;
-      border-top: 1px solid var(--border-color);
-      padding-top: 15px;
-    }
-
-    /* Form controls */
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .form-label {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-    }
-
-    .inspection-notes {
-      background: var(--bg-input);
-      border: 1px solid var(--border-color);
-      color: var(--text-main);
-      padding: 8px;
-      border-radius: 4px;
-      width: 100%;
-      font-family: inherit;
-    }
-
-    .radio-group {
-      display: flex;
-      gap: 15px;
-    }
-
-    .radio-label {
-      font-size: 0.85rem;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      cursor: pointer;
-    }
+    .stat-number { font-size: 1.2rem; font-weight: 700; color: var(--accent); }
   </style>
 </head>
 <body>
 
-  <!-- Barre supérieure d'actions -->
-  <header class="header-bar">
-    <div class="title">Tableau de Bord</div>
-    <div>
-      <button class="btn-action" onclick="openRobinSettings()" title="Paramètres du planning de Robin">
-        ⚙️ Planning Robin
-      </button>
+  <header>
+    <h1>🌴 Planificateur de Vacances & Garde (Zone B)</h1>
+    <div style="display: flex; gap: 10px;">
+      <button class="btn" onclick="exportData()">💾 Exporter</button>
+      <button class="btn" onclick="importData()">📂 Importer</button>
     </div>
   </header>
 
-  <!-- Contenu principal avec Calendrier -->
-  <main class="dashboard-grid">
-    <section class="card">
-      <div class="card-header">
-        <div class="card-title">Planning du mois</div>
-        <div class="calendar-controls">
-          <button class="btn-action" onclick="changeMonth(-1)">◄</button>
-          <span id="current-month-display" class="month-title">---</span>
-          <button class="btn-action" onclick="changeMonth(1)">►</button>
-        </div>
-      </div>
+  <!-- Options et Filtres -->
+  <div class="toolbar">
+    <div class="toolbar-group">
+      <input type="checkbox" id="toggleGarde" onchange="renderCalendar()" checked>
+      <label for="toggleGarde">Afficher garde Robin (1 WE / 2)</label>
+    </div>
 
-      <div class="calendar-grid">
-        <div class="calendar-day-header">Lun</div>
-        <div class="calendar-day-header">Mar</div>
-        <div class="calendar-day-header">Mer</div>
-        <div class="calendar-day-header">Jeu</div>
-        <div class="calendar-day-header">Ven</div>
-        <div class="calendar-day-header">Sam</div>
-        <div class="calendar-day-header">Dim</div>
-      </div>
-      <div id="calendar-body" class="calendar-grid" style="margin-top: 6px;">
-        <!-- Injecté dynamiquement en JS -->
-      </div>
-    </section>
-  </main>
+    <div class="toolbar-group" id="gardeParityGroup">
+      <span>Weekend :</span>
+      <select id="selectParity" onchange="renderCalendar()" class="btn">
+        <option value="even" selected>Semaines Paires</option>
+        <option value="odd">Semaines Impaires</option>
+      </select>
+    </div>
 
-  <!-- Modale de configuration du planning de Robin -->
-  <div id="robin-settings-overlay" class="inspection-overlay">
-    <div class="inspection-panel">
-      <div class="inspection-header">
-        <span class="inspection-title">⚙️ Configuration — Planning de Robin</span>
-        <button class="inspection-close" onclick="closeRobinSettings()">✕</button>
-      </div>
-      
-      <div class="inspection-body">
-        <!-- Section 1 : Règle 1 weekend sur 2 -->
-        <div class="form-group" style="background: var(--bg-panel); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color);">
-          <label class="form-label" style="color: var(--accent); font-weight: 700; margin-bottom: 8px;">
-            Alternance 1 week-end sur 2
-          </label>
-          
-          <label class="radio-label" style="margin-bottom: 10px;">
-            <input type="checkbox" id="robin-enable-alternate" onchange="toggleAlternateSettings()" checked>
-            Activer la coloration automatique 1 WE / 2
-          </label>
-
-          <div id="alternate-options" class="radio-group" style="flex-direction: column; gap: 8px;">
-            <span class="form-label">Colorer les week-ends des semaines :</span>
-            <div style="display: flex; gap: 15px;">
-              <label class="radio-label">
-                <input type="radio" name="robin-parity" value="even" checked> Semaines paires
-              </label>
-              <label class="radio-label">
-                <input type="radio" name="robin-parity" value="odd"> Semaines impaires
-              </label>
-            </div>
-          </div>
-        </div>
-
-        <!-- Section 2 : Ajout de périodes d'exception -->
-        <div class="form-group" style="background: var(--bg-panel); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color);">
-          <label class="form-label" style="color: var(--accent); font-weight: 700; margin-bottom: 8px;">
-            Ajouter une période spécifique
-          </label>
-
-          <div style="display: flex; flex-direction: column; gap: 8px;">
-            <div style="display: flex; gap: 8px;">
-              <div style="flex: 1;">
-                <span class="form-label">Début</span>
-                <input type="date" id="period-start" class="inspection-notes" style="min-height: auto; padding: 6px;">
-              </div>
-              <div style="flex: 1;">
-                <span class="form-label">Fin</span>
-                <input type="date" id="period-end" class="inspection-notes" style="min-height: auto; padding: 6px;">
-              </div>
-            </div>
-
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
-              <div class="radio-group">
-                <label class="radio-label">
-                  <input type="radio" name="period-type" value="presence" checked> Présence
-                </label>
-                <label class="radio-label">
-                  <input type="radio" name="period-type" value="absence"> Absence
-                </label>
-              </div>
-              <button type="button" class="btn-action" style="background: var(--accent); color: #000; border: none; font-weight: 600;" onclick="addRobinPeriod()">
-                + Ajouter
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Section 3 : Liste des exceptions configurées -->
-        <div class="form-group">
-          <label class="form-label">Périodes personnalisées enregistrées :</label>
-          <div id="robin-periods-list" style="display: flex; flex-direction: column; gap: 6px; max-height: 140px; overflow-y: auto;">
-            <!-- Les périodes s'afficheront ici dynamiquement -->
-          </div>
-        </div>
-      </div>
-
-      <div class="inspection-footer">
-        <button class="btn-cancel" onclick="closeRobinSettings()">Annuler</button>
-        <button class="btn-save" onclick="saveRobinSettings()">Enregistrer</button>
-      </div>
+    <div class="toolbar-group">
+      <input type="checkbox" id="toggleVacances" onchange="renderCalendar()" checked>
+      <label for="toggleVacances">Afficher vacances scolaires (Zone B)</label>
     </div>
   </div>
 
+  <!-- Légende -->
+  <div class="legend">
+    <div class="legend-item"><div class="legend-box" style="background: var(--color-weekend);"></div> Week-end</div>
+    <div class="legend-item"><div class="legend-box" style="background: var(--color-ferie);"></div> Jour Férié</div>
+    <div class="legend-item"><div class="legend-box" style="background: var(--color-vacances-zoneB);"></div> Vacances Zone B</div>
+    <div class="legend-item"><div class="legend-box" style="border: 2px solid var(--color-garde);"></div> Garde Robin</div>
+    <div class="legend-item"><div class="legend-box" style="background: var(--color-conge);"></div> Congé Pose (Cliquable)</div>
+  </div>
+
+  <!-- Calendrier -->
+  <main class="calendar-card">
+    <div class="calendar-header">
+      <button class="btn" onclick="changeMonth(-1)">◄ Mois précédent</button>
+      <span id="monthDisplay" class="month-title">---</span>
+      <button class="btn" onclick="changeMonth(1)">Mois suivant ►</button>
+    </div>
+
+    <div class="grid-weekdays">
+      <div class="weekday">Lun</div><div class="weekday">Mar</div><div class="weekday">Mer</div>
+      <div class="weekday">Jeu</div><div class="weekday">Ven</div><div class="weekday">Sam</div>
+      <div class="weekday">Dim</div>
+    </div>
+
+    <div id="calendarGrid" class="grid-days" style="margin-top: 8px;"></div>
+  </main>
+
+  <!-- Total Congés -->
+  <div class="counter-bar">
+    <span>Jours de congés posés sur le mois sélectionné :</span>
+    <span id="congesMonthCount" class="stat-number">0 jour(s)</span>
+  </div>
+
   <script>
-    // Variable globale pour la date de navigation du calendrier
     let currentDate = new Date();
+    let congesPoses = JSON.parse(localStorage.getItem('my_conges_data')) || [];
 
-    // Configuration du planning de Robin
-    let robinConfig = {
-      enableAlternate: true,
-      parity: 'even', // 'even' (semaines paires) ou 'odd' (semaines impaires)
-      customPeriods: []
-    };
+    // Jours fériés fixes & calculables
+    function getJoursFeries(year) {
+      const feries = [
+        `${year}-01-01`, `${year}-05-01`, `${year}-05-08`, `${year}-07-14`,
+        `${year}-08-15`, `${year}-11-01`, `${year}-11-11`, `${year}-12-25`
+      ];
+      // Pâques & Ascension / Pentecôte
+      const a = year % 19, b = Math.floor(year / 100), c = year % 100;
+      const d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25);
+      const g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30;
+      const i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7;
+      const m = Math.floor((a + 11 * h + 22 * l) / 451);
+      const month = Math.floor((h + l - 7 * m + 114) / 31) - 1;
+      const day = ((h + l - 7 * m + 114) % 31) + 1;
+      
+      const paques = new Date(year, month, day);
+      const lundiPaques = new Date(paques); lundiPaques.setDate(paques.getDate() + 1);
+      const ascension = new Date(paques); ascension.setDate(paques.getDate() + 39);
+      const lundiPentecote = new Date(paques); lundiPentecote.setDate(paques.getDate() + 50);
 
-    // Calcul du numéro de semaine ISO
+      const fmt = d => d.toISOString().split('T')[0];
+      return [...feries, fmt(lundiPaques), fmt(ascension), fmt(lundiPentecote)];
+    }
+
+    // Vacances Scolaires Zone B (Exemple d'intervalles 2026/2027)
+    const vacancesZoneB = [
+      { start: "2026-02-07", end: "2026-02-23", label: "Hiver" },
+      { start: "2026-04-04", end: "2026-04-20", label: "Printemps" },
+      { start: "2026-07-04", end: "2026-08-31", label: "Été" },
+      { start: "2026-10-17", end: "2026-11-02", label: "Toussaint" },
+      { start: "2026-12-19", end: "2027-01-04", label: "Noël" }
+    ];
+
     function getISOWeekNumber(d) {
       const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
       const dayNum = date.getUTCDay() || 7;
@@ -428,82 +288,95 @@
       return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
     }
 
-    // Format YYYY-MM-DD local
-    function formatDateISO(date) {
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
+    function toggleConges(dateStr) {
+      if (congesPoses.includes(dateStr)) {
+        congesPoses = congesPoses.filter(d => d !== dateStr);
+      } else {
+        congesPoses.push(dateStr);
+      }
+      localStorage.setItem('my_conges_data', JSON.stringify(congesPoses));
+      renderCalendar();
     }
 
-    // Génération et affichage du calendrier
     function renderCalendar() {
-      const container = document.getElementById('calendar-body');
-      container.innerHTML = '';
+      const grid = document.getElementById('calendarGrid');
+      grid.innerHTML = '';
 
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth();
 
-      // Titre du mois
       const monthNames = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
-      document.getElementById('current-month-display').innerText = `${monthNames[month]} ${year}`;
+      document.getElementById('monthDisplay').innerText = `${monthNames[month]}${year}`;
+
+      const feries = getJoursFeries(year);
+      const showGarde = document.getElementById('toggleGarde').checked;
+      const parity = document.getElementById('selectParity').value;
+      const showVacances = document.getElementById('toggleVacances').checked;
 
       const firstDay = new Date(year, month, 1);
       const lastDay = new Date(year, month + 1, 0);
 
-      // Jour de la semaine (0 pour Lundi, 6 pour Dimanche)
       let startDayIndex = firstDay.getDay() - 1;
       if (startDayIndex === -1) startDayIndex = 6;
 
-      // Cases vides en début de mois
       for (let i = 0; i < startDayIndex; i++) {
         const emptyCell = document.createElement('div');
-        emptyCell.className = 'calendar-day empty';
-        container.appendChild(emptyCell);
+        emptyCell.className = 'day empty';
+        grid.appendChild(emptyCell);
       }
 
-      // Remplissage des jours
+      let monthCongesCount = 0;
+
       for (let day = 1; day <= lastDay.getDate(); day++) {
         const dateObj = new Date(year, month, day);
-        const dayOfWeek = dateObj.getDay(); // 0 = Dimanche, 6 = Samedi
-        const dateStr = formatDateISO(dateObj);
+        const dayOfWeek = dateObj.getDay(); // 0 = Dim, 6 = Sam
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         const weekNum = getISOWeekNumber(dateObj);
-        const isEvenWeek = weekNum % 2 === 0;
+        const isEven = weekNum % 2 === 0;
 
-        let isRobinPresent = false;
+        const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+        const isFerie = feries.includes(dateStr);
+        const isConge = congesPoses.includes(dateStr);
 
-        // 1. Règle du 1/2 weekend
-        if (robinConfig.enableAlternate && (dayOfWeek === 6 || dayOfWeek === 0)) {
-          if ((robinConfig.parity === 'even' && isEvenWeek) || (robinConfig.parity === 'odd' && !isEvenWeek)) {
-            isRobinPresent = true;
+        let isVacances = false;
+        if (showVacances) {
+          isVacances = vacancesZoneB.some(v => dateStr >= v.start && dateStr <= v.end);
+        }
+
+        let isGarde = false;
+        if (showGarde && isWeekend) {
+          if ((parity === 'even' && isEven) || (parity === 'odd' && !isEven)) {
+            isGarde = true;
           }
         }
 
-        // 2. Application des périodes d'exception (priorité absolue)
-        robinConfig.customPeriods.forEach(period => {
-          if (dateStr >= period.start && dateStr <= period.end) {
-            isRobinPresent = (period.type === 'presence');
-          }
-        });
-
-        // Construction du DOM pour le jour
-        const dayCell = document.createElement('div');
-        dayCell.className = `calendar-day ${isRobinPresent ? 'robin-present' : ''}`;
-
-        const numSpan = document.createElement('span');
-        numSpan.className = 'day-number';
-        numSpan.innerText = day;
-        dayCell.appendChild(numSpan);
-
-        if (isRobinPresent) {
-          const badge = document.createElement('span');
-          badge.className = 'day-badge';
-          badge.innerText = 'Robin';
-          dayCell.appendChild(badge);
+        const cell = document.createElement('div');
+        cell.className = 'day';
+        if (isWeekend) cell.classList.add('is-weekend');
+        if (isFerie) cell.classList.add('is-ferie');
+        if (isVacances) cell.classList.add('is-vacances');
+        if (isGarde) cell.classList.add('is-garde-we');
+        if (isConge) {
+          cell.classList.add('is-conge');
+          if (!isWeekend && !isFerie) monthCongesCount++;
         }
 
-        container.appendChild(dayCell);
+        cell.onclick = () => toggleConges(dateStr);
+
+        let labelsHTML = '';
+        if (isConge) labelsHTML += `<span class="day-label badge-conge">Congé</span>`;
+        if (isFerie) labelsHTML += `<span class="day-label badge-ferie">Férié</span>`;
+        if (isGarde) labelsHTML += `<span class="day-label badge-garde">Robin</span>`;
+
+        cell.innerHTML = `
+          <span class="day-number">${day}</span>
+          <div style="display:flex; flex-direction:column; gap:2px;">${labelsHTML}</div>
+        `;
+
+        grid.appendChild(cell);
       }
+
+      document.getElementById('congesMonthCount').innerText = `${monthCongesCount} jour(s) ouvré(s)`;
     }
 
     function changeMonth(offset) {
@@ -511,93 +384,38 @@
       renderCalendar();
     }
 
-    // Gestion de la Modale
-    function openRobinSettings() {
-      document.getElementById('robin-settings-overlay').classList.add('visible');
-      renderPeriodsList();
+    function exportData() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(congesPoses));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", "mes_vacances.json");
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
     }
 
-    function closeRobinSettings() {
-      document.getElementById('robin-settings-overlay').classList.remove('visible');
-    }
-
-    function toggleAlternateSettings() {
-      const enabled = document.getElementById('robin-enable-alternate').checked;
-      document.getElementById('alternate-options').style.opacity = enabled ? '1' : '0.4';
-      document.querySelectorAll('input[name="robin-parity"]').forEach(r => r.disabled = !enabled);
-    }
-
-    function addRobinPeriod() {
-      const start = document.getElementById('period-start').value;
-      const end = document.getElementById('period-end').value;
-      const type = document.querySelector('input[name="period-type"]:checked').value;
-
-      if (!start || !end) {
-        alert("Veuillez sélectionner une date de début et de fin.");
-        return;
+    function importData() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json';
+      input.onchange = e => {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.readAsText(file, 'UTF-8');
+        reader.onload = readerEvent => {
+          try {
+            congesPoses = JSON.parse(readerEvent.target.result);
+            localStorage.setItem('my_conges_data', JSON.stringify(congesPoses));
+            renderCalendar();
+          } catch(err) {
+            alert("Fichier JSON invalide.");
+          }
+        }
       }
-
-      if (start > end) {
-        alert("La date de début doit être antérieure à la date de fin.");
-        return;
-      }
-
-      robinConfig.customPeriods.push({
-        id: Date.now(),
-        start: start,
-        end: end,
-        type: type
-      });
-
-      document.getElementById('period-start').value = '';
-      document.getElementById('period-end').value = '';
-      renderPeriodsList();
+      input.click();
     }
 
-    function removeRobinPeriod(id) {
-      robinConfig.customPeriods = robinConfig.customPeriods.filter(p => p.id !== id);
-      renderPeriodsList();
-    }
-
-    function renderPeriodsList() {
-      const container = document.getElementById('robin-periods-list');
-      container.innerHTML = '';
-
-      if (robinConfig.customPeriods.length === 0) {
-        container.innerHTML = '<span style="font-size: 0.75rem; color: var(--text-muted);">Aucune période d\'exception ajoutée.</span>';
-        return;
-      }
-
-      robinConfig.customPeriods.forEach(p => {
-        const item = document.createElement('div');
-        item.style.cssText = 'display: flex; justify-content: space-between; align-items: center; background: #141414; border: 1px solid #333; padding: 6px 10px; border-radius: 4px; font-size: 0.8rem;';
-        
-        const badgeColor = p.type === 'presence' ? '#22c55e' : '#ef4444';
-        const badgeText = p.type === 'presence' ? 'Présence' : 'Absence';
-
-        item.innerHTML = `
-          <span>Du <b>${p.start}</b> au <b>${p.end}</b></span>
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="color: ${badgeColor}; font-weight: 700; font-size: 0.75rem;">${badgeText}</span>
-            <button onclick="removeRobinPeriod(${p.id})" style="background: none; border: none; color: #888; cursor: pointer;">✕</button>
-          </div>
-        `;
-        container.appendChild(item);
-      });
-    }
-
-    function saveRobinSettings() {
-      robinConfig.enableAlternate = document.getElementById('robin-enable-alternate').checked;
-      robinConfig.parity = document.querySelector('input[name="robin-parity"]:checked').value;
-      
-      closeRobinSettings();
-      renderCalendar();
-    }
-
-    // Initialisation au chargement de la page
-    window.onload = function() {
-      renderCalendar();
-    };
+    window.onload = renderCalendar;
   </script>
 </body>
 </html>
