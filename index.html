@@ -9,6 +9,7 @@
       --bg-main: #0d1117;
       --bg-card: #161b22;
       --bg-panel: #21262d;
+      --bg-input: #0d1117;
       --border: #30363d;
       --text-main: #c9d1d9;
       --text-muted: #8b949e;
@@ -19,6 +20,8 @@
       --color-vacances-zoneB: #0d3868;
       --color-conge: #1f6beb;
       --color-garde: #e3b341;
+      --color-presence: #238636;
+      --color-absence: #da3633;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -56,6 +59,14 @@
       margin-bottom: 20px;
       flex-wrap: wrap;
       align-items: center;
+      justify-content: space-between;
+    }
+
+    .toolbar-left, .toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
     }
 
     .toolbar-group {
@@ -80,11 +91,11 @@
       border-radius: 6px;
       cursor: pointer;
       font-size: 0.85rem;
-      transition: background 0.2s;
+      transition: background 0.2s, border-color 0.2s;
     }
 
-    .btn:hover { background: #30363d; }
-    .btn-accent { background: var(--accent); color: #000; font-weight: 600; border: none; }
+    .btn:hover { background: #30363d; border-color: #8b949e; }
+    .btn-icon { padding: 6px 10px; font-size: 1rem; }
 
     /* Legend */
     .legend {
@@ -144,7 +155,7 @@
       justify-content: space-between;
       cursor: pointer;
       user-select: none;
-      transition: border-color 0.15s, transform 0.1s;
+      transition: border-color 0.15s;
       position: relative;
     }
 
@@ -154,7 +165,7 @@
     .day-number { font-size: 0.85rem; font-weight: 700; }
     .day-label { font-size: 0.65rem; font-weight: 600; border-radius: 3px; padding: 2px 4px; text-align: center; line-height: 1.1; margin-top: 2px; }
 
-    /* Distinctive States */
+    /* Visual States */
     .day.is-weekend { background: var(--color-weekend); }
     .day.is-ferie { background: var(--color-ferie); }
     .day.is-vacances { border-left: 4px solid #388bfd; background: linear-gradient(135deg, var(--color-vacances-zoneB) 0%, var(--bg-panel) 100%); }
@@ -165,25 +176,94 @@
     .badge-garde { background: var(--color-garde); color: #000; }
     .badge-ferie { background: #ff7b72; color: #000; }
 
-    /* Counter Footer */
-    .counter-bar {
+    /* Dashboard CP Counter */
+    .cp-dashboard {
       margin-top: 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 15px;
+    }
+
+    .cp-card {
       background: var(--bg-card);
       border: 1px solid var(--border);
       padding: 15px;
       border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
 
-    .stat-number { font-size: 1.2rem; font-weight: 700; color: var(--accent); }
+    .cp-card-title { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
+    .cp-input-group { display: flex; align-items: center; gap: 8px; }
+    .cp-input {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: 4px;
+      width: 70px;
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .cp-value { font-size: 1.3rem; font-weight: 700; color: #fff; }
+    .cp-value.highlight { color: var(--accent); }
+
+    /* Modal Overlay */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-overlay.visible { display: flex; }
+
+    .modal {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      width: 90%;
+      max-width: 500px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 10px;
+    }
+
+    .modal-title { font-weight: 700; font-size: 1.1rem; color: #fff; }
+    .modal-close { background: none; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer; }
+
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-label { font-size: 0.8rem; color: var(--text-muted); }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      border-top: 1px solid var(--border);
+      padding-top: 15px;
+    }
   </style>
 </head>
 <body>
 
   <header>
-    <h1>🌴 Planificateur de Vacances & Garde (Zone B)</h1>
+    <h1>🌴 Planificateur de Vacances (Zone B)</h1>
     <div style="display: flex; gap: 10px;">
       <button class="btn" onclick="exportData()">💾 Exporter</button>
       <button class="btn" onclick="importData()">📂 Importer</button>
@@ -192,22 +272,18 @@
 
   <!-- Options et Filtres -->
   <div class="toolbar">
-    <div class="toolbar-group">
-      <input type="checkbox" id="toggleGarde" onchange="renderCalendar()" checked>
-      <label for="toggleGarde">Afficher garde Robin (1 WE / 2)</label>
+    <div class="toolbar-left">
+      <button class="btn btn-icon" onclick="openGardeModal()" title="Configurer la garde de Robin">
+        ⚙️ Robin
+      </button>
+      <div class="toolbar-group">
+        <input type="checkbox" id="toggleVacances" onchange="renderCalendar()" checked>
+        <label for="toggleVacances">Vacances scolaires (Zone B)</label>
+      </div>
     </div>
 
-    <div class="toolbar-group" id="gardeParityGroup">
-      <span>Weekend :</span>
-      <select id="selectParity" onchange="renderCalendar()" class="btn">
-        <option value="even" selected>Semaines Paires</option>
-        <option value="odd">Semaines Impaires</option>
-      </select>
-    </div>
-
-    <div class="toolbar-group">
-      <input type="checkbox" id="toggleVacances" onchange="renderCalendar()" checked>
-      <label for="toggleVacances">Afficher vacances scolaires (Zone B)</label>
+    <div class="toolbar-right">
+      <span style="font-size: 0.85rem; color: var(--text-muted);">Clique sur un jour pour poser/retirer un congé</span>
     </div>
   </div>
 
@@ -217,7 +293,7 @@
     <div class="legend-item"><div class="legend-box" style="background: var(--color-ferie);"></div> Jour Férié</div>
     <div class="legend-item"><div class="legend-box" style="background: var(--color-vacances-zoneB);"></div> Vacances Zone B</div>
     <div class="legend-item"><div class="legend-box" style="border: 2px solid var(--color-garde);"></div> Garde Robin</div>
-    <div class="legend-item"><div class="legend-box" style="background: var(--color-conge);"></div> Congé Pose (Cliquable)</div>
+    <div class="legend-item"><div class="legend-box" style="background: var(--color-conge);"></div> Congé Posé</div>
   </div>
 
   <!-- Calendrier -->
@@ -237,23 +313,127 @@
     <div id="calendarGrid" class="grid-days" style="margin-top: 8px;"></div>
   </main>
 
-  <!-- Total Congés -->
-  <div class="counter-bar">
-    <span>Jours de congés posés sur le mois sélectionné :</span>
-    <span id="congesMonthCount" class="stat-number">0 jour(s)</span>
+  <!-- Tableau de Bord des Congés Payés -->
+  <section class="cp-dashboard">
+    <div class="cp-card">
+      <div class="cp-card-title">SOLDE CP N-1 (Solde précédent)</div>
+      <div class="cp-input-group">
+        <input type="number" id="inputCpN1" class="cp-input" value="10" min="0" step="0.5" onchange="updateCPData()">
+        <span>jours acquis</span>
+      </div>
+      <div style="font-size: 0.8rem; color: var(--text-muted);">
+        Restants : <b id="restantCpN1" style="color: #fff;">0</b> j
+      </div>
+    </div>
+
+    <div class="cp-card">
+      <div class="cp-card-title">SOLDE CP N (Année en cours)</div>
+      <div class="cp-input-group">
+        <input type="number" id="inputCpN" class="cp-input" value="25" min="0" step="0.5" onchange="updateCPData()">
+        <span>jours acquis</span>
+      </div>
+      <div style="font-size: 0.8rem; color: var(--text-muted);">
+        Restants : <b id="restantCpN" style="color: #fff;">0</b> j
+      </div>
+    </div>
+
+    <div class="cp-card">
+      <div class="cp-card-title">DÉCOMPTE TOTAL CONGÉS POSÉS</div>
+      <div class="cp-value highlight" id="totalCongesPoses">0 jour(s)</div>
+      <div style="font-size: 0.75rem; color: var(--text-muted);">
+        *Exclut automatiquement les samedis, dimanches et jours fériés.
+      </div>
+    </div>
+
+    <div class="cp-card">
+      <div class="cp-card-title">SOLDE TOTAL DISPONIBLE</div>
+      <div class="cp-value" id="soldeTotalGlobal">0 jour(s)</div>
+      <div style="font-size: 0.75rem; color: var(--text-muted);">
+        Consommation prioritaire sur CP N-1.
+      </div>
+    </div>
+  </section>
+
+  <!-- Modale Configuration Robin -->
+  <div id="gardeModal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">⚙️ Configuration — Garde de Robin</span>
+        <button class="modal-close" onclick="closeGardeModal()">✕</button>
+      </div>
+
+      <div class="form-group" style="background: var(--bg-panel); padding: 12px; border-radius: 6px;">
+        <label class="toolbar-group" style="font-weight: 700; color: var(--accent); margin-bottom: 8px;">
+          <input type="checkbox" id="modalEnableGarde" onchange="toggleModalAlternate()" checked>
+          Alternance 1 week-end sur 2
+        </label>
+
+        <div id="modalAlternateOptions" style="display: flex; flex-direction: column; gap: 6px; margin-left: 24px;">
+          <span class="form-label">Colorer les week-ends des :</span>
+          <div style="display: flex; gap: 15px;">
+            <label class="toolbar-group">
+              <input type="radio" name="modalParity" value="even" checked> Semaines paires
+            </label>
+            <label class="toolbar-group">
+              <input type="radio" name="modalParity" value="odd"> Semaines impaires
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group" style="background: var(--bg-panel); padding: 12px; border-radius: 6px;">
+        <span class="form-label" style="color: var(--accent); font-weight: 700;">Ajouter une période d'exception</span>
+        
+        <div style="display: flex; gap: 8px; margin-top: 6px;">
+          <div style="flex:1;">
+            <span class="form-label">Début</span>
+            <input type="date" id="periodStart" class="btn" style="width: 100%;">
+          </div>
+          <div style="flex:1;">
+            <span class="form-label">Fin</span>
+            <input type="date" id="periodEnd" class="btn" style="width: 100%;">
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+          <div style="display: flex; gap: 10px;">
+            <label class="toolbar-group"><input type="radio" name="periodType" value="presence" checked> Présence</label>
+            <label class="toolbar-group"><input type="radio" name="periodType" value="absence"> Absence</label>
+          </div>
+          <button class="btn" style="background: var(--accent); color: #000; font-weight: 600; border: none;" onclick="addCustomPeriod()">+ Ajouter</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <span class="form-label">Périodes d'exception enregistrées :</span>
+        <div id="periodsList" style="display: flex; flex-direction: column; gap: 6px; max-height: 120px; overflow-y: auto;"></div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn" onclick="closeGardeModal()">Annuler</button>
+        <button class="btn" style="background: var(--accent); color: #000; font-weight: 700; border: none;" onclick="saveGardeSettings()">Enregistrer</button>
+      </div>
+    </div>
   </div>
 
   <script>
     let currentDate = new Date();
-    let congesPoses = JSON.parse(localStorage.getItem('my_conges_data')) || [];
+    
+    // Données stockées localement
+    let congesPoses = JSON.parse(localStorage.getItem('my_conges_dates')) || [];
+    let cpConfig = JSON.parse(localStorage.getItem('my_cp_config')) || { n1: 10, n: 25 };
+    let gardeConfig = JSON.parse(localStorage.getItem('my_garde_config')) || {
+      enabled: true,
+      parity: 'even',
+      customPeriods: []
+    };
 
-    // Jours fériés fixes & calculables
+    // Calcul dynamique des jours fériés français
     function getJoursFeries(year) {
       const feries = [
         `${year}-01-01`, `${year}-05-01`, `${year}-05-08`, `${year}-07-14`,
         `${year}-08-15`, `${year}-11-01`, `${year}-11-11`, `${year}-12-25`
       ];
-      // Pâques & Ascension / Pentecôte
       const a = year % 19, b = Math.floor(year / 100), c = year % 100;
       const d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25);
       const g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30;
@@ -271,13 +451,13 @@
       return [...feries, fmt(lundiPaques), fmt(ascension), fmt(lundiPentecote)];
     }
 
-    // Vacances Scolaires Zone B (Exemple d'intervalles 2026/2027)
+    // Vacances Scolaires Zone B (Exemples d'intervalles)
     const vacancesZoneB = [
-      { start: "2026-02-07", end: "2026-02-23", label: "Hiver" },
-      { start: "2026-04-04", end: "2026-04-20", label: "Printemps" },
-      { start: "2026-07-04", end: "2026-08-31", label: "Été" },
-      { start: "2026-10-17", end: "2026-11-02", label: "Toussaint" },
-      { start: "2026-12-19", end: "2027-01-04", label: "Noël" }
+      { start: "2026-02-07", end: "2026-02-23" },
+      { start: "2026-04-04", end: "2026-04-20" },
+      { start: "2026-07-04", end: "2026-08-31" },
+      { start: "2026-10-17", end: "2026-11-02" },
+      { start: "2026-12-19", end: "2027-01-04" }
     ];
 
     function getISOWeekNumber(d) {
@@ -294,8 +474,46 @@
       } else {
         congesPoses.push(dateStr);
       }
-      localStorage.setItem('my_conges_data', JSON.stringify(congesPoses));
+      localStorage.setItem('my_conges_dates', JSON.stringify(congesPoses));
       renderCalendar();
+      updateCPData();
+    }
+
+    function isJourOuvreEffective(dateStr) {
+      const parts = dateStr.split('-');
+      const d = new Date(parts[0], parts[1] - 1, parts[2]);
+      const dayOfWeek = d.getDay(); // 0 = Dim, 6 = Sam
+      if (dayOfWeek === 0 || dayOfWeek === 6) return false;
+      const feries = getJoursFeries(d.getFullYear());
+      if (feries.includes(dateStr)) return false;
+      return true;
+    }
+
+    function updateCPData() {
+      cpConfig.n1 = parseFloat(document.getElementById('inputCpN1').value) || 0;
+      cpConfig.n = parseFloat(document.getElementById('inputCpN').value) || 0;
+      localStorage.setItem('my_cp_config', JSON.stringify(cpConfig));
+
+      // Calcul uniquement sur les jours ouvrés
+      let totalOuvresPoses = 0;
+      congesPoses.forEach(dStr => {
+        if (isJourOuvreEffective(dStr)) {
+          totalOuvresPoses++;
+        }
+      });
+
+      document.getElementById('totalCongesPoses').innerText = `${totalOuvresPoses} jour(s)`;
+
+      // Consommation prioritaire CP N-1 puis CP N
+      let restantN1 = Math.max(0, cpConfig.n1 - totalOuvresPoses);
+      let resteAImputerN = Math.max(0, totalOuvresPoses - cpConfig.n1);
+      let restantN = Math.max(0, cpConfig.n - resteAImputerN);
+
+      document.getElementById('restantCpN1').innerText = restantN1;
+      document.getElementById('restantCpN').innerText = restantN;
+
+      let soldeGlobal = restantN1 + restantN;
+      document.getElementById('soldeTotalGlobal').innerText = `${soldeGlobal} jour(s)`;
     }
 
     function renderCalendar() {
@@ -306,11 +524,9 @@
       const month = currentDate.getMonth();
 
       const monthNames = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
-      document.getElementById('monthDisplay').innerText = `${monthNames[month]}${year}`;
+      document.getElementById('monthDisplay').innerText = `${monthNames[month]} ${year}`;
 
       const feries = getJoursFeries(year);
-      const showGarde = document.getElementById('toggleGarde').checked;
-      const parity = document.getElementById('selectParity').value;
       const showVacances = document.getElementById('toggleVacances').checked;
 
       const firstDay = new Date(year, month, 1);
@@ -325,11 +541,9 @@
         grid.appendChild(emptyCell);
       }
 
-      let monthCongesCount = 0;
-
       for (let day = 1; day <= lastDay.getDate(); day++) {
         const dateObj = new Date(year, month, day);
-        const dayOfWeek = dateObj.getDay(); // 0 = Dim, 6 = Sam
+        const dayOfWeek = dateObj.getDay();
         const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         const weekNum = getISOWeekNumber(dateObj);
         const isEven = weekNum % 2 === 0;
@@ -343,12 +557,18 @@
           isVacances = vacancesZoneB.some(v => dateStr >= v.start && dateStr <= v.end);
         }
 
+        // Garde Robin : alternance WE + exceptions
         let isGarde = false;
-        if (showGarde && isWeekend) {
-          if ((parity === 'even' && isEven) || (parity === 'odd' && !isEven)) {
+        if (gardeConfig.enabled && isWeekend) {
+          if ((gardeConfig.parity === 'even' && isEven) || (gardeConfig.parity === 'odd' && !isEven)) {
             isGarde = true;
           }
         }
+        gardeConfig.customPeriods.forEach(p => {
+          if (dateStr >= p.start && dateStr <= p.end) {
+            isGarde = (p.type === 'presence');
+          }
+        });
 
         const cell = document.createElement('div');
         cell.className = 'day';
@@ -356,10 +576,7 @@
         if (isFerie) cell.classList.add('is-ferie');
         if (isVacances) cell.classList.add('is-vacances');
         if (isGarde) cell.classList.add('is-garde-we');
-        if (isConge) {
-          cell.classList.add('is-conge');
-          if (!isWeekend && !isFerie) monthCongesCount++;
-        }
+        if (isConge) cell.classList.add('is-conge');
 
         cell.onclick = () => toggleConges(dateStr);
 
@@ -375,8 +592,6 @@
 
         grid.appendChild(cell);
       }
-
-      document.getElementById('congesMonthCount').innerText = `${monthCongesCount} jour(s) ouvré(s)`;
     }
 
     function changeMonth(offset) {
@@ -384,14 +599,88 @@
       renderCalendar();
     }
 
+    /* Modal Robin */
+    function openGardeModal() {
+      document.getElementById('modalEnableGarde').checked = gardeConfig.enabled;
+      document.querySelector(`input[name="modalParity"][value="${gardeConfig.parity}"]`).checked = true;
+      toggleModalAlternate();
+      renderPeriodsList();
+      document.getElementById('gardeModal').classList.add('visible');
+    }
+
+    function closeGardeModal() {
+      document.getElementById('gardeModal').classList.remove('visible');
+    }
+
+    function toggleModalAlternate() {
+      const enabled = document.getElementById('modalEnableGarde').checked;
+      document.getElementById('modalAlternateOptions').style.opacity = enabled ? '1' : '0.4';
+      document.querySelectorAll('input[name="modalParity"]').forEach(r => r.disabled = !enabled);
+    }
+
+    function addCustomPeriod() {
+      const start = document.getElementById('periodStart').value;
+      const end = document.getElementById('periodEnd').value;
+      const type = document.querySelector('input[name="periodType"]:checked').value;
+
+      if (!start || !end || start > end) {
+        alert("Veuillez saisir des dates de début et de fin valides.");
+        return;
+      }
+
+      gardeConfig.customPeriods.push({ id: Date.now(), start, end, type });
+      document.getElementById('periodStart').value = '';
+      document.getElementById('periodEnd').value = '';
+      renderPeriodsList();
+    }
+
+    function removeCustomPeriod(id) {
+      gardeConfig.customPeriods = gardeConfig.customPeriods.filter(p => p.id !== id);
+      renderPeriodsList();
+    }
+
+    function renderPeriodsList() {
+      const container = document.getElementById('periodsList');
+      container.innerHTML = '';
+      if (gardeConfig.customPeriods.length === 0) {
+        container.innerHTML = '<span style="font-size:0.75rem; color:var(--text-muted);">Aucune période d\'exception.</span>';
+        return;
+      }
+
+      gardeConfig.customPeriods.forEach(p => {
+        const div = document.createElement('div');
+        div.style.cssText = 'display:flex; justify-content:space-between; align-items:center; background:var(--bg-input); border:1px solid var(--border); padding:6px 10px; border-radius:4px; font-size:0.8rem;';
+        const color = p.type === 'presence' ? 'var(--color-presence)' : 'var(--color-absence)';
+        const label = p.type === 'presence' ? 'Présence' : 'Absence';
+        div.innerHTML = `
+          <span>Du <b>${p.start}</b> au <b>${p.end}</b></span>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="color:${color}; font-weight:700;">${label}</span>
+            <button onclick="removeCustomPeriod(${p.id})" style="background:none; border:none; color:var(--text-muted); cursor:pointer;">✕</button>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function saveGardeSettings() {
+      gardeConfig.enabled = document.getElementById('modalEnableGarde').checked;
+      gardeConfig.parity = document.querySelector('input[name="modalParity"]:checked').value;
+      localStorage.setItem('my_garde_config', JSON.stringify(gardeConfig));
+      closeGardeModal();
+      renderCalendar();
+    }
+
+    /* Export / Import */
     function exportData() {
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(congesPoses));
-      const downloadAnchor = document.createElement('a');
-      downloadAnchor.setAttribute("href", dataStr);
-      downloadAnchor.setAttribute("download", "mes_vacances.json");
-      document.body.appendChild(downloadAnchor);
-      downloadAnchor.click();
-      downloadAnchor.remove();
+      const payload = { congesPoses, cpConfig, gardeConfig };
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload));
+      const anchor = document.createElement('a');
+      anchor.setAttribute("href", dataStr);
+      anchor.setAttribute("download", "sauvegarde_vacances.json");
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
     }
 
     function importData() {
@@ -402,11 +691,22 @@
         const file = e.target.files[0];
         const reader = new FileReader();
         reader.readAsText(file, 'UTF-8');
-        reader.onload = readerEvent => {
+        reader.onload = ev => {
           try {
-            congesPoses = JSON.parse(readerEvent.target.result);
-            localStorage.setItem('my_conges_data', JSON.stringify(congesPoses));
+            const data = JSON.parse(ev.target.result);
+            if (data.congesPoses) congesPoses = data.congesPoses;
+            if (data.cpConfig) cpConfig = data.cpConfig;
+            if (data.gardeConfig) gardeConfig = data.gardeConfig;
+
+            localStorage.setItem('my_conges_dates', JSON.stringify(congesPoses));
+            localStorage.setItem('my_cp_config', JSON.stringify(cpConfig));
+            localStorage.setItem('my_garde_config', JSON.stringify(gardeConfig));
+
+            document.getElementById('inputCpN1').value = cpConfig.n1;
+            document.getElementById('inputCpN').value = cpConfig.n;
+
             renderCalendar();
+            updateCPData();
           } catch(err) {
             alert("Fichier JSON invalide.");
           }
@@ -415,7 +715,12 @@
       input.click();
     }
 
-    window.onload = renderCalendar;
+    window.onload = function() {
+      document.getElementById('inputCpN1').value = cpConfig.n1;
+      document.getElementById('inputCpN').value = cpConfig.n;
+      renderCalendar();
+      updateCPData();
+    };
   </script>
 </body>
 </html>
