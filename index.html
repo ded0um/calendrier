@@ -708,12 +708,8 @@
 
         cell.onclick = () => toggleConges(dateStr);
 
-        let labelsHTML = '';
-        if (isConge) labelsHTML += `<span class="day-label badge-conge">Congé</span>`;
-
         cell.innerHTML = `
           <span class="day-number">${day}</span>
-          <div style="display:flex; flex-direction:column; gap:2px;">${labelsHTML}</div>
         `;
 
         grid.appendChild(cell);
