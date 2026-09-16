@@ -17,9 +17,9 @@
       
       --color-weekend: #1c2128;
       --color-ferie: #702a00;
-      --color-vacances-zoneB: #0d3868;
+      --color-vacances-zoneB: #1b5e20; /* Vert au lieu du bleu */
       --color-conge: #1f6beb;
-      --color-garde: #e3b341;
+      --color-garde: #b58900; /* Assombri */
       --color-presence: #238636;
       --color-absence: #da3633;
     }
@@ -93,8 +93,8 @@
     .btn-icon { padding: 6px 10px; font-size: 1rem; }
     .btn-active { background: var(--accent); color: #000; font-weight: 700; border-color: var(--accent); }
     .btn-active:hover { background: #e07b00; border-color: #e07b00; }
-    .btn-validate { background: #238636; color: #fff; font-weight: 700; border-color: #238636; }
-    .btn-validate:hover { background: #2ea043; border-color: #2ea043; }
+    .btn-validate { background: #1e6629; color: #fff; font-weight: 700; border-color: #1e6629; } /* Assombri */
+    .btn-validate:hover { background: #238636; border-color: #238636; }
 
     /* Legend */
     .legend {
@@ -176,6 +176,12 @@
       border: 1px solid var(--border);
       border-radius: 6px;
       padding: 10px;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .mini-month:hover {
+      border-color: var(--accent);
     }
 
     .mini-month-title {
@@ -216,11 +222,11 @@
     .mini-day:hover { border-color: var(--accent); }
     .mini-day.empty { background: transparent; border-color: transparent; cursor: default; }
 
-    /* Visual States (Couleurs unies uniquement, pas de dégradés ni de bordures couleur) */
+    /* Visual States */
     .day.is-weekend, .mini-day.is-weekend { background: var(--color-weekend); }
     .day.is-ferie, .mini-day.is-ferie { background: var(--color-ferie); }
     .day.is-vacances, .mini-day.is-vacances { background: var(--color-vacances-zoneB); }
-    .day.is-garde-we, .mini-day.is-garde-we { background: var(--color-garde); color: #000; }
+    .day.is-garde-we, .mini-day.is-garde-we { background: var(--color-garde); color: #fff; }
     .day.is-conge, .mini-day.is-conge { background: var(--color-conge) !important; color: #fff; font-weight: 700; }
 
     .badge-conge { background: #fff; color: var(--color-conge); }
@@ -714,6 +720,11 @@
       }
     }
 
+    function selectMonthFromAnnual(monthIndex) {
+      currentDate.setMonth(monthIndex);
+      setViewMode('month');
+    }
+
     function renderAnnualGrid(year, feries, showVacances) {
       const container = document.getElementById('annualView');
       container.innerHTML = '';
@@ -723,6 +734,7 @@
       for (let month = 0; month < 12; month++) {
         const miniMonth = document.createElement('div');
         miniMonth.className = 'mini-month';
+        miniMonth.onclick = () => selectMonthFromAnnual(month);
 
         const title = document.createElement('div');
         title.className = 'mini-month-title';
@@ -767,7 +779,10 @@
 
           cell.innerText = day;
           cell.title = dateStr;
-          cell.onclick = () => toggleConges(dateStr);
+          cell.onclick = (e) => {
+            e.stopPropagation();
+            toggleConges(dateStr);
+          };
 
           gridDays.appendChild(cell);
         }
@@ -849,39 +864,68 @@
       renderCalendar();
     }
 
+    /* Regroupement des dates contiguës sous forme de périodes */
+    function getCongesRanges() {
+      if (congesPoses.length === 0) return [];
+      
+      const sortedDates = [...congesPoses].sort();
+      const ranges = [];
+      
+      let rangeStart = sortedDates[0];
+      let prevDate = new Date(sortedDates[0]);
+
+      for (let i = 1; i < sortedDates.length; i++) {
+        const currDate = new Date(sortedDates[i]);
+        const diffDays = Math.round((currDate - prevDate) / (1000 * 60 * 60 * 24));
+
+        if (diffDays === 1) {
+          prevDate = currDate;
+        } else {
+          ranges.push({ start: rangeStart, end: sortedDates[i - 1] });
+          rangeStart = sortedDates[i];
+          prevDate = currDate;
+        }
+      }
+      ranges.push({ start: rangeStart, end: sortedDates[sortedDates.length - 1] });
+      return ranges;
+    }
+
+    function formatDateFR(dateStr) {
+      const parts = dateStr.split('-');
+      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+
     /* Modal Récapitulatif CP Posés */
     function openCpSummaryModal() {
       const listContainer = document.getElementById('cpSummaryList');
       listContainer.innerHTML = '';
 
-      const sortedDates = [...congesPoses].sort();
+      const ranges = getCongesRanges();
       let totalOuvres = 0;
 
-      if (sortedDates.length === 0) {
+      congesPoses.forEach(dateStr => {
+        if (isJourOuvreEffective(dateStr)) totalOuvres++;
+      });
+
+      if (ranges.length === 0) {
         listContainer.innerHTML = '<div style="color:var(--text-muted); font-size:0.85rem; text-align:center; padding:10px;">Aucun congé posé.</div>';
         document.getElementById('cpSummaryCount').innerText = 'Total : 0 jour ouvré posé';
       } else {
-        sortedDates.forEach(dateStr => {
-          const parts = dateStr.split('-');
-          const d = new Date(parts[0], parts[1] - 1, parts[2]);
-          const isOuvre = isJourOuvreEffective(dateStr);
-          
-          if (isOuvre) totalOuvres++;
+        ranges.forEach(r => {
+          let text = '';
+          if (r.start === r.end) {
+            text = `- le ${formatDateFR(r.start)}`;
+          } else {
+            text = `- du ${formatDateFR(r.start)} au ${formatDateFR(r.end)}`;
+          }
 
-          const formattedDate = `${dayNames[d.getDay()]} ${parts[2]} ${monthNames[d.getMonth()]} ${parts[0]}`;
-          
           const item = document.createElement('div');
           item.className = 'cp-list-item';
-          item.innerHTML = `
-            <span>${formattedDate}</span>
-            <span style="font-size:0.75rem; font-weight:700; color:${isOuvre ? 'var(--accent)' : 'var(--text-muted)'};">
-              ${isOuvre ? 'Décompté (Ouvré)' : 'Non décompté (W-E / Férié)'}
-            </span>
-          `;
+          item.innerHTML = `<span style="font-weight:600; color:#fff;">${text}</span>`;
           listContainer.appendChild(item);
         });
 
-        document.getElementById('cpSummaryCount').innerText = `Total : ${sortedDates.length} jour(s) sélectionné(s) — dont ${totalOuvres} jour(s) ouvré(s) décompté(s)`;
+        document.getElementById('cpSummaryCount').innerText = `Total : ${congesPoses.length} jour(s) sélectionné(s) — dont ${totalOuvres} jour(s) ouvré(s) décompté(s)`;
       }
 
       document.getElementById('cpSummaryModal').classList.add('visible');
