@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tableau de Bord & Planning</title>
+  <title>Tableau de Bord & Planning Robin</title>
   <style>
     :root {
       --bg-main: #000000;
@@ -87,10 +87,10 @@
       cursor: pointer;
     }
 
-    /* Grid & Calendar Dashboard Mockup */
+    /* Dashboard Layout */
     .dashboard-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      grid-template-columns: 1fr;
       gap: 20px;
     }
 
@@ -101,11 +101,88 @@
       padding: 20px;
     }
 
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
     .card-title {
-      font-size: 1rem;
+      font-size: 1.1rem;
       color: var(--accent);
-      margin-bottom: 15px;
       font-weight: 600;
+    }
+
+    /* Calendar Component */
+    .calendar-controls {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .month-title {
+      font-weight: 700;
+      font-size: 1rem;
+      min-width: 140px;
+      text-align: center;
+      text-transform: capitalize;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+    }
+
+    .calendar-day-header {
+      text-align: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      padding: 8px 0;
+    }
+
+    .calendar-day {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      min-height: 70px;
+      padding: 6px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+    }
+
+    .calendar-day.empty {
+      background: transparent;
+      border-color: transparent;
+    }
+
+    .day-number {
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .day-badge {
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 2px 4px;
+      border-radius: 3px;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    /* Highlight style for Robin presence */
+    .calendar-day.robin-present {
+      border-color: var(--accent);
+      background: rgba(255, 140, 0, 0.08);
+    }
+
+    .calendar-day.robin-present .day-badge {
+      background: var(--accent);
+      color: #000;
     }
 
     /* Overlay & Modal Windows */
@@ -221,13 +298,30 @@
     </div>
   </header>
 
-  <!-- Contenu principal / Aperçu du tableau de bord -->
+  <!-- Contenu principal avec Calendrier -->
   <main class="dashboard-grid">
     <section class="card">
-      <div class="card-title">Calendrier / Vue d'ensemble</div>
-      <p style="color: var(--text-muted); font-size: 0.9rem;">
-        Cliquez sur le bouton « ⚙️ Planning Robin » en haut à droite pour configurer la règle d'alternance et les périodes personnalisées.
-      </p>
+      <div class="card-header">
+        <div class="card-title">Planning du mois</div>
+        <div class="calendar-controls">
+          <button class="btn-action" onclick="changeMonth(-1)">◄</button>
+          <span id="current-month-display" class="month-title">---</span>
+          <button class="btn-action" onclick="changeMonth(1)">►</button>
+        </div>
+      </div>
+
+      <div class="calendar-grid">
+        <div class="calendar-day-header">Lun</div>
+        <div class="calendar-day-header">Mar</div>
+        <div class="calendar-day-header">Mer</div>
+        <div class="calendar-day-header">Jeu</div>
+        <div class="calendar-day-header">Ven</div>
+        <div class="calendar-day-header">Sam</div>
+        <div class="calendar-day-header">Dim</div>
+      </div>
+      <div id="calendar-body" class="calendar-grid" style="margin-top: 6px;">
+        <!-- Injecté dynamiquement en JS -->
+      </div>
     </section>
   </main>
 
@@ -315,13 +409,109 @@
   </div>
 
   <script>
-    // Configuration globale
+    // Variable globale pour la date de navigation du calendrier
+    let currentDate = new Date();
+
+    // Configuration du planning de Robin
     let robinConfig = {
       enableAlternate: true,
-      parity: 'even',
+      parity: 'even', // 'even' (semaines paires) ou 'odd' (semaines impaires)
       customPeriods: []
     };
 
+    // Calcul du numéro de semaine ISO
+    function getISOWeekNumber(d) {
+      const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+      const dayNum = date.getUTCDay() || 7;
+      date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+      const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+      return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+    }
+
+    // Format YYYY-MM-DD local
+    function formatDateISO(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    // Génération et affichage du calendrier
+    function renderCalendar() {
+      const container = document.getElementById('calendar-body');
+      container.innerHTML = '';
+
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+
+      // Titre du mois
+      const monthNames = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
+      document.getElementById('current-month-display').innerText = `${monthNames[month]} ${year}`;
+
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+
+      // Jour de la semaine (0 pour Lundi, 6 pour Dimanche)
+      let startDayIndex = firstDay.getDay() - 1;
+      if (startDayIndex === -1) startDayIndex = 6;
+
+      // Cases vides en début de mois
+      for (let i = 0; i < startDayIndex; i++) {
+        const emptyCell = document.createElement('div');
+        emptyCell.className = 'calendar-day empty';
+        container.appendChild(emptyCell);
+      }
+
+      // Remplissage des jours
+      for (let day = 1; day <= lastDay.getDate(); day++) {
+        const dateObj = new Date(year, month, day);
+        const dayOfWeek = dateObj.getDay(); // 0 = Dimanche, 6 = Samedi
+        const dateStr = formatDateISO(dateObj);
+        const weekNum = getISOWeekNumber(dateObj);
+        const isEvenWeek = weekNum % 2 === 0;
+
+        let isRobinPresent = false;
+
+        // 1. Règle du 1/2 weekend
+        if (robinConfig.enableAlternate && (dayOfWeek === 6 || dayOfWeek === 0)) {
+          if ((robinConfig.parity === 'even' && isEvenWeek) || (robinConfig.parity === 'odd' && !isEvenWeek)) {
+            isRobinPresent = true;
+          }
+        }
+
+        // 2. Application des périodes d'exception (priorité absolue)
+        robinConfig.customPeriods.forEach(period => {
+          if (dateStr >= period.start && dateStr <= period.end) {
+            isRobinPresent = (period.type === 'presence');
+          }
+        });
+
+        // Construction du DOM pour le jour
+        const dayCell = document.createElement('div');
+        dayCell.className = `calendar-day ${isRobinPresent ? 'robin-present' : ''}`;
+
+        const numSpan = document.createElement('span');
+        numSpan.className = 'day-number';
+        numSpan.innerText = day;
+        dayCell.appendChild(numSpan);
+
+        if (isRobinPresent) {
+          const badge = document.createElement('span');
+          badge.className = 'day-badge';
+          badge.innerText = 'Robin';
+          dayCell.appendChild(badge);
+        }
+
+        container.appendChild(dayCell);
+      }
+    }
+
+    function changeMonth(offset) {
+      currentDate.setMonth(currentDate.getMonth() + offset);
+      renderCalendar();
+    }
+
+    // Gestion de la Modale
     function openRobinSettings() {
       document.getElementById('robin-settings-overlay').classList.add('visible');
       renderPeriodsList();
@@ -401,11 +591,13 @@
       robinConfig.parity = document.querySelector('input[name="robin-parity"]:checked').value;
       
       closeRobinSettings();
-      
-      if (typeof updateCalendarDisplay === 'function') {
-        updateCalendarDisplay();
-      }
+      renderCalendar();
     }
+
+    // Initialisation au chargement de la page
+    window.onload = function() {
+      renderCalendar();
+    };
   </script>
 </body>
 </html>
