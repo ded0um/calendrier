@@ -86,6 +86,42 @@
       gap: 4px;
     }
 
+    .toggle-vue {
+      position: relative;
+      display: flex;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 3px;
+      cursor: pointer;
+      width: 160px;
+      height: 34px;
+      user-select: none;
+    }
+    .toggle-vue-option {
+      flex: 1;
+      text-align: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+      line-height: 28px;
+      position: relative;
+      z-index: 1;
+      color: var(--text-muted);
+      transition: color 0.2s;
+    }
+    .toggle-vue-option.actif { color: #000; }
+    .toggle-vue-knob {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: calc(50% - 3px);
+      height: 28px;
+      background: var(--accent);
+      border-radius: 16px;
+      transition: transform 0.25s ease;
+    }
+    .toggle-vue-knob.annee { transform: translateX(100%); }
+
     input[type="checkbox"] {
       accent-color: var(--accent);
       width: 16px;
@@ -141,6 +177,11 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 15px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: var(--bg-card);
+      padding: 6px 0;
     }
 
     .month-title { font-size: 1.2rem; font-weight: 700; color: #fff; text-transform: capitalize; }
@@ -408,7 +449,6 @@
       .toolbar-right { justify-self: stretch; width: 100%; }
       .toolbar-right > .btn { width: 100%; text-align: center; }
       .toolbar-cp-summary { justify-content: space-between; font-size: 0.8rem; padding-top: 8px; }
-      .view-toggle .btn { flex: 1; }
 
       .legend { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
       .legend-item { font-size: 0.75rem; }
@@ -441,9 +481,10 @@
     </div>
 
     <div class="toolbar-center">
-      <div class="view-toggle">
-        <button id="btnViewMonth" class="btn btn-active" onclick="setViewMode('month')">Mois</button>
-        <button id="btnViewYear" class="btn" onclick="setViewMode('year')">Année</button>
+      <div class="toggle-vue" onclick="basculerVue()">
+        <span class="toggle-vue-option actif" data-mode="month">Mois</span>
+        <span class="toggle-vue-option" data-mode="year">Année</span>
+        <div id="toggleVueKnob" class="toggle-vue-knob"></div>
       </div>
       <button class="btn" onclick="allerAujourdhui()">Aujourd'hui</button>
     </div>
@@ -1040,13 +1081,19 @@
 
     function setViewMode(mode) {
       viewMode = mode;
-      document.getElementById('btnViewMonth').className = mode === 'month' ? 'btn btn-active' : 'btn';
-      document.getElementById('btnViewYear').className = mode === 'year' ? 'btn btn-active' : 'btn';
-      
+      document.getElementById('toggleVueKnob').classList.toggle('annee', mode === 'year');
+      document.querySelectorAll('.toggle-vue-option').forEach(el => {
+        el.classList.toggle('actif', el.dataset.mode === mode);
+      });
+
       document.getElementById('monthlyView').style.display = mode === 'month' ? 'block' : 'none';
       document.getElementById('annualView').style.display = mode === 'year' ? 'grid' : 'none';
       
       renderCalendar();
+    }
+
+    function basculerVue() {
+      setViewMode(viewMode === 'month' ? 'year' : 'month');
     }
 
     function changePeriod(offset) {
@@ -1063,29 +1110,61 @@
       setViewMode('month');
     }
 
-    /* Navigation tactile : balayer à gauche/droite pour changer de mois ou d'année */
-    let swipeDepartX = 0;
-    let swipeDepartY = 0;
+    /* Navigation tactile : le calendrier suit le doigt pendant le balayage */
+    function getVueActive() {
+      return viewMode === 'month' ? document.getElementById('calendarGrid') : document.getElementById('annualView');
+    }
 
     function initNavigationTactile() {
       const zone = document.querySelector('.calendar-card');
+      let departX = 0;
+      let departY = 0;
+      let enTrainDeBalayer = false;
 
       zone.addEventListener('touchstart', (e) => {
-        swipeDepartX = e.changedTouches[0].screenX;
-        swipeDepartY = e.changedTouches[0].screenY;
+        departX = e.changedTouches[0].screenX;
+        departY = e.changedTouches[0].screenY;
+        enTrainDeBalayer = false;
+      }, { passive: true });
+
+      zone.addEventListener('touchmove', (e) => {
+        const diffX = e.changedTouches[0].screenX - departX;
+        const diffY = e.changedTouches[0].screenY - departY;
+
+        if (!enTrainDeBalayer && Math.abs(diffX) > 10 && Math.abs(diffX) > Math.abs(diffY) * 1.5) {
+          enTrainDeBalayer = true;
+        }
+
+        if (enTrainDeBalayer) {
+          const vue = getVueActive();
+          if (vue) vue.style.transform = `translateX(${diffX}px)`;
+        }
       }, { passive: true });
 
       zone.addEventListener('touchend', (e) => {
-        const arriveeX = e.changedTouches[0].screenX;
-        const arriveeY = e.changedTouches[0].screenY;
-        const diffX = arriveeX - swipeDepartX;
-        const diffY = arriveeY - swipeDepartY;
+        const diffX = e.changedTouches[0].screenX - departX;
+        const vue = getVueActive();
 
-        const distanceMinimum = 50;
-        const estHorizontal = Math.abs(diffX) > Math.abs(diffY) * 1.5;
+        if (!enTrainDeBalayer || !vue) return;
 
-        if (Math.abs(diffX) > distanceMinimum && estHorizontal) {
-          changePeriod(diffX < 0 ? 1 : -1);
+        const distanceMinimum = 60;
+
+        if (Math.abs(diffX) > distanceMinimum) {
+          const direction = diffX < 0 ? 1 : -1;
+          vue.style.transition = 'transform 0.2s ease-out';
+          vue.style.transform = `translateX(${diffX < 0 ? '-100%' : '100%'})`;
+          setTimeout(() => {
+            changePeriod(direction);
+            const nouvelleVue = getVueActive();
+            if (nouvelleVue) {
+              nouvelleVue.style.transition = 'none';
+              nouvelleVue.style.transform = 'translateX(0)';
+            }
+          }, 200);
+        } else {
+          vue.style.transition = 'transform 0.2s ease-out';
+          vue.style.transform = 'translateX(0)';
+          setTimeout(() => { vue.style.transition = 'none'; }, 200);
         }
       }, { passive: true });
     }
