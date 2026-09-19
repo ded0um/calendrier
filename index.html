@@ -455,7 +455,6 @@
     <div class="toolbar-cp-summary">
       <span>N-1 : <b id="restantCpN1">0</b> j</span>
       <span>N : <b id="restantCpN">0</b> j</span>
-      <span>Posés : <b id="totalCongesPoses">0 jour(s)</b></span>
       <span>Disponible : <b id="soldeTotalGlobal" class="highlight-text">0 jour(s)</b></span>
     </div>
   </div>
@@ -494,12 +493,12 @@
         <span class="form-label" style="color: var(--accent); font-weight: 700;">Congés Payés</span>
         <div class="cp-row" style="margin-top: 8px;">
           <span class="cp-label">CP N-1</span>
-          <input type="number" id="inputCpN1" class="cp-input-sm" value="10" min="0" step="0.5" onchange="updateCPData()">
+          <input type="number" id="inputCpN1" class="cp-input-sm" value="0" min="0" step="0.5" onchange="updateCPData()">
           <span class="cp-sub">jours acquis</span>
         </div>
         <div class="cp-row">
           <span class="cp-label">CP N</span>
-          <input type="number" id="inputCpN" class="cp-input-sm" value="25" min="0" step="0.5" onchange="updateCPData()">
+          <input type="number" id="inputCpN" class="cp-input-sm" value="0" min="0" step="0.5" onchange="updateCPData()">
           <span class="cp-sub">jours acquis</span>
         </div>
       </div>
@@ -669,10 +668,10 @@
     let currentDate = new Date();
     let viewMode = 'month'; // 'month' ou 'year'
     
-    // Données stockées localement
-    let congesPoses = JSON.parse(localStorage.getItem('my_conges_dates')) || [];
-    let cpConfig = JSON.parse(localStorage.getItem('my_cp_config')) || { n1: 10, n: 25 };
-    let gardeConfig = JSON.parse(localStorage.getItem('my_garde_config')) || {
+    // Données de session (rien n'est conservé entre deux ouvertures de la page)
+    let congesPoses = [];
+    let cpConfig = { n1: 0, n: 0 };
+    let gardeConfig = {
       enabled: true,
       parity: 'even',
       customPeriods: []
@@ -779,13 +778,11 @@
       fetch(SCRIPT_URL)
         .then(r => r.json())
         .then(data => {
-          localStorage.setItem('my_conges_valides_cache', JSON.stringify(data));
           appliquerCongesValides(data);
         })
         .catch(err => {
-          console.error("Impossible de charger les CP validés, utilisation du cache local :", err);
-          const cache = JSON.parse(localStorage.getItem('my_conges_valides_cache') || '[]');
-          appliquerCongesValides(cache);
+          console.error("Impossible de charger les CP déjà enregistrés dans la feuille :", err);
+          appliquerCongesValides([]);
         });
     }
 
@@ -825,7 +822,7 @@
 
     function openDemandeModal() {
       document.getElementById('demandePeriode').value = new Date().getFullYear();
-      document.getElementById('demandeEnfants').value = localStorage.getItem('my_nb_enfants') || 0;
+      document.getElementById('demandeEnfants').value = 0;
 
       const resultats = document.getElementById('demandeResultats');
       resultats.style.display = 'none';
@@ -927,8 +924,6 @@
         return;
       }
 
-      localStorage.setItem('my_nb_enfants', enfants);
-
       btn.disabled = true;
       btn.innerText = "Envoi en cours...";
 
@@ -1006,7 +1001,6 @@
       } else {
         congesPoses.push(dateStr);
       }
-      localStorage.setItem('my_conges_dates', JSON.stringify(congesPoses));
       renderCalendar();
       updateCPData();
     }
@@ -1024,7 +1018,6 @@
     function updateCPData() {
       cpConfig.n1 = parseFloat(document.getElementById('inputCpN1').value) || 0;
       cpConfig.n = parseFloat(document.getElementById('inputCpN').value) || 0;
-      localStorage.setItem('my_cp_config', JSON.stringify(cpConfig));
 
       let totalOuvresPoses = 0;
       getTousLesConges().forEach(dStr => {
@@ -1032,8 +1025,6 @@
           totalOuvresPoses++;
         }
       });
-
-      document.getElementById('totalCongesPoses').innerText = `${totalOuvresPoses} jour(s)`;
 
       let restantN1 = Math.max(0, cpConfig.n1 - totalOuvresPoses);
       let resteAImputerN = Math.max(0, totalOuvresPoses - cpConfig.n1);
@@ -1070,6 +1061,33 @@
     function allerAujourdhui() {
       currentDate = new Date();
       setViewMode('month');
+    }
+
+    /* Navigation tactile : balayer à gauche/droite pour changer de mois ou d'année */
+    let swipeDepartX = 0;
+    let swipeDepartY = 0;
+
+    function initNavigationTactile() {
+      const zone = document.querySelector('.calendar-card');
+
+      zone.addEventListener('touchstart', (e) => {
+        swipeDepartX = e.changedTouches[0].screenX;
+        swipeDepartY = e.changedTouches[0].screenY;
+      }, { passive: true });
+
+      zone.addEventListener('touchend', (e) => {
+        const arriveeX = e.changedTouches[0].screenX;
+        const arriveeY = e.changedTouches[0].screenY;
+        const diffX = arriveeX - swipeDepartX;
+        const diffY = arriveeY - swipeDepartY;
+
+        const distanceMinimum = 50;
+        const estHorizontal = Math.abs(diffX) > Math.abs(diffY) * 1.5;
+
+        if (Math.abs(diffX) > distanceMinimum && estHorizontal) {
+          changePeriod(diffX < 0 ? 1 : -1);
+        }
+      }, { passive: true });
     }
 
     function openParametresModal() {
@@ -1326,7 +1344,6 @@
     function saveGardeSettings() {
       gardeConfig.enabled = document.getElementById('modalEnableGarde').checked;
       gardeConfig.parity = document.querySelector('input[name="modalParity"]:checked').value;
-      localStorage.setItem('my_garde_config', JSON.stringify(gardeConfig));
       closeGardeModal();
       renderCalendar();
     }
@@ -1410,6 +1427,7 @@
       renderCalendar();
       updateCPData();
       chargerCongesValides();
+      initNavigationTactile();
     };
   </script>
 </body>
