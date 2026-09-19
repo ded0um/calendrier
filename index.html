@@ -45,24 +45,34 @@
 
     /* Controls & Options Bar */
     .toolbar {
-      display: flex;
-      gap: 15px;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      grid-template-areas: "left center right" "summary summary summary";
+      align-items: center;
+      gap: 12px 15px;
       background: var(--bg-card);
       padding: 15px;
       border: 1px solid var(--border);
       border-radius: 8px;
       margin-bottom: 20px;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
     }
 
-    .toolbar-left, .toolbar-right {
+    .toolbar-left { grid-area: left; display: flex; align-items: center; justify-self: start; }
+    .toolbar-center { grid-area: center; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; justify-self: center; }
+    .toolbar-right { grid-area: right; display: flex; align-items: center; justify-self: end; }
+
+    .toolbar-cp-summary {
+      grid-area: summary;
       display: flex;
-      align-items: center;
-      gap: 12px;
+      justify-content: center;
+      gap: 16px;
       flex-wrap: wrap;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
     }
+    .toolbar-cp-summary b { color: #fff; }
 
     .toolbar-group {
       display: flex;
@@ -74,7 +84,6 @@
     .view-toggle {
       display: flex;
       gap: 4px;
-      margin-left: 10px;
     }
 
     input[type="checkbox"] {
@@ -233,6 +242,7 @@
     /* Visual States */
     .day.is-weekend, .mini-day.is-weekend { background: var(--color-weekend); }
     .day.is-conge, .mini-day.is-conge { background: var(--color-conge) !important; color: #fff; font-weight: 700; }
+    .day.is-today, .mini-day.is-today { border: 2px solid var(--accent); }
 
     .badge-conge { background: #fff; color: var(--color-conge); }
 
@@ -251,10 +261,7 @@
 
     /* Dashboard CP Counter */
     .cp-dashboard {
-      margin-top: 20px;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 15px;
+      margin-top: 12px;
     }
 
     .cp-card {
@@ -282,6 +289,37 @@
 
     .cp-value { font-size: 1.3rem; font-weight: 700; color: #fff; }
     .cp-value.highlight { color: var(--accent); }
+
+    /* Version compacte du tableau de bord CP */
+    .cp-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      font-size: 0.85rem;
+    }
+    .cp-label {
+      font-weight: 700;
+      color: var(--text-muted);
+      min-width: 45px;
+    }
+    .cp-input-sm {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      color: #fff;
+      padding: 4px 8px;
+      border-radius: 4px;
+      width: 55px;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+    .cp-sub { color: var(--text-muted); font-size: 0.8rem; }
+    .cp-restant { margin-left: auto; color: var(--text-muted); font-size: 0.8rem; }
+    .cp-restant b { color: #fff; }
+    .cp-divider { border-top: 1px solid var(--border); margin: 4px 0; }
+    .cp-row-summary { justify-content: space-between; font-size: 0.9rem; font-weight: 700; color: #fff; }
+    .highlight-text { color: var(--accent); }
+    .cp-footnote { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
 
     /* Modals Overlay */
     .modal-overlay {
@@ -358,18 +396,23 @@
     @media (max-width: 640px) {
       body { padding: 10px; }
 
-      .toolbar { flex-direction: column; align-items: stretch; gap: 10px; }
-      .toolbar-left, .toolbar-right { flex-direction: column; align-items: stretch; width: 100%; gap: 8px; }
-      .toolbar-left > .btn, .toolbar-right > .btn { width: 100%; text-align: center; }
-      .view-toggle { margin-left: 0; width: 100%; }
+      .toolbar {
+        grid-template-columns: auto 1fr;
+        grid-template-areas: "left center" "right right" "summary summary";
+        gap: 8px 10px;
+        padding: 10px;
+        margin-bottom: 10px;
+      }
+      .toolbar-left { justify-self: start; }
+      .toolbar-center { justify-self: start; justify-content: flex-start; width: auto; }
+      .toolbar-right { justify-self: stretch; width: 100%; }
+      .toolbar-right > .btn { width: 100%; text-align: center; }
+      .toolbar-cp-summary { justify-content: space-between; font-size: 0.8rem; padding-top: 8px; }
       .view-toggle .btn { flex: 1; }
 
       .legend { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
       .legend-item { font-size: 0.75rem; }
       .legend input[type="checkbox"] { width: 20px; height: 20px; }
-
-      .cp-dashboard { grid-template-columns: 1fr; gap: 10px; }
-      .cp-card { padding: 12px; }
 
       .calendar-card { padding: 12px; }
       .month-title { font-size: 1rem; }
@@ -394,80 +437,28 @@
   <!-- Options et Filtres -->
   <div class="toolbar">
     <div class="toolbar-left">
-      <button class="btn btn-icon" onclick="openGardeModal()" title="Configurer la garde de Robin">
-        ⚙️ Robin
-      </button>
+      <button class="btn btn-icon" onclick="openParametresModal()" title="Paramètres">⚙️</button>
+    </div>
+
+    <div class="toolbar-center">
       <div class="view-toggle">
         <button id="btnViewMonth" class="btn btn-active" onclick="setViewMode('month')">Mois</button>
         <button id="btnViewYear" class="btn" onclick="setViewMode('year')">Année</button>
       </div>
+      <button class="btn" onclick="allerAujourdhui()">Aujourd'hui</button>
     </div>
 
     <div class="toolbar-right">
-      <button class="btn btn-validate" onclick="openDemandeModal()" title="Nouvelle demande de CP">Demande CP</button>
+      <button class="btn btn-validate" onclick="openDemandeModal()" title="Nouvelle demande de CP">✔ Demande CP</button>
+    </div>
+
+    <div class="toolbar-cp-summary">
+      <span>N-1 : <b id="restantCpN1">0</b> j</span>
+      <span>N : <b id="restantCpN">0</b> j</span>
+      <span>Posés : <b id="totalCongesPoses">0 jour(s)</b></span>
+      <span>Disponible : <b id="soldeTotalGlobal" class="highlight-text">0 jour(s)</b></span>
     </div>
   </div>
-
-  <!-- Légende -->
-  <div class="legend">
-    <div class="legend-item">
-      <input type="checkbox" id="toggleFerie" checked onchange="renderCalendar()">
-      <div class="legend-box" style="background: var(--color-ferie);"></div> Jour Férié
-    </div>
-    <div class="legend-item">
-      <input type="checkbox" id="toggleVacances" checked onchange="renderCalendar()">
-      <div class="legend-box" style="background: var(--color-vacances-zoneB);"></div> Vacances Zone B
-    </div>
-    <div class="legend-item">
-      <input type="checkbox" id="toggleGarde" checked onchange="renderCalendar()">
-      <div class="legend-box" style="background: var(--color-garde);"></div> Garde Robin
-    </div>
-    <div class="legend-item">
-      <input type="checkbox" id="toggleConge" checked onchange="renderCalendar()">
-      <div class="legend-box" style="background: var(--color-conge);"></div> Congé Posé
-    </div>
-  </div>
-
-  <!-- Tableau de Bord des Congés Payés -->
-  <section class="cp-dashboard">
-    <div class="cp-card">
-      <div class="cp-card-title">SOLDE CP N-1 (Solde précédent)</div>
-      <div class="cp-input-group">
-        <input type="number" id="inputCpN1" class="cp-input" value="10" min="0" step="0.5" onchange="updateCPData()">
-        <span>jours acquis</span>
-      </div>
-      <div style="font-size: 0.8rem; color: var(--text-muted);">
-        Restants : <b id="restantCpN1" style="color: #fff;">0</b> j
-      </div>
-    </div>
-
-    <div class="cp-card">
-      <div class="cp-card-title">SOLDE CP N (Année en cours)</div>
-      <div class="cp-input-group">
-        <input type="number" id="inputCpN" class="cp-input" value="25" min="0" step="0.5" onchange="updateCPData()">
-        <span>jours acquis</span>
-      </div>
-      <div style="font-size: 0.8rem; color: var(--text-muted);">
-        Restants : <b id="restantCpN" style="color: #fff;">0</b> j
-      </div>
-    </div>
-
-    <div class="cp-card">
-      <div class="cp-card-title">DÉCOMPTE TOTAL CONGÉS POSÉS</div>
-      <div class="cp-value highlight" id="totalCongesPoses">0 jour(s)</div>
-      <div style="font-size: 0.75rem; color: var(--text-muted);">
-        *Exclut automatiquement les samedis, dimanches et jours fériés.
-      </div>
-    </div>
-
-    <div class="cp-card">
-      <div class="cp-card-title">SOLDE TOTAL DISPONIBLE</div>
-      <div class="cp-value" id="soldeTotalGlobal">0 jour(s)</div>
-      <div style="font-size: 0.75rem; color: var(--text-muted);">
-        Consommation prioritaire sur CP N-1.
-      </div>
-    </div>
-  </section>
 
   <!-- Calendrier -->
   <main class="calendar-card">
@@ -490,6 +481,60 @@
     <!-- Vue Annuelle -->
     <div id="annualView" class="annual-grid" style="display: none;"></div>
   </main>
+
+  <!-- Modale Paramètres -->
+  <div id="parametresModal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">⚙️ Paramètres</span>
+        <button class="modal-close" onclick="closeParametresModal()">✕</button>
+      </div>
+
+      <div class="form-group" style="background: var(--bg-panel); padding: 12px; border-radius: 6px;">
+        <span class="form-label" style="color: var(--accent); font-weight: 700;">Congés Payés</span>
+        <div class="cp-row" style="margin-top: 8px;">
+          <span class="cp-label">CP N-1</span>
+          <input type="number" id="inputCpN1" class="cp-input-sm" value="10" min="0" step="0.5" onchange="updateCPData()">
+          <span class="cp-sub">jours acquis</span>
+        </div>
+        <div class="cp-row">
+          <span class="cp-label">CP N</span>
+          <input type="number" id="inputCpN" class="cp-input-sm" value="25" min="0" step="0.5" onchange="updateCPData()">
+          <span class="cp-sub">jours acquis</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <button class="btn" style="width: 100%;" onclick="closeParametresModal(); openGardeModal();">⚙️ Configurer la garde de Robin</button>
+      </div>
+
+      <div class="form-group">
+        <span class="form-label">Afficher dans le calendrier</span>
+        <div class="legend">
+          <div class="legend-item">
+            <input type="checkbox" id="toggleFerie" checked onchange="renderCalendar()">
+            <div class="legend-box" style="background: var(--color-ferie);"></div> Jour Férié
+          </div>
+          <div class="legend-item">
+            <input type="checkbox" id="toggleVacances" checked onchange="renderCalendar()">
+            <div class="legend-box" style="background: var(--color-vacances-zoneB);"></div> Vacances Zone B
+          </div>
+          <div class="legend-item">
+            <input type="checkbox" id="toggleGarde" checked onchange="renderCalendar()">
+            <div class="legend-box" style="background: var(--color-garde);"></div> Garde Robin
+          </div>
+          <div class="legend-item">
+            <input type="checkbox" id="toggleConge" checked onchange="renderCalendar()">
+            <div class="legend-box" style="background: var(--color-conge);"></div> Congé Posé
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-validate" onclick="closeParametresModal()">Fermer</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Modale Configuration Robin -->
   <div id="gardeModal" class="modal-overlay">
@@ -605,6 +650,9 @@
         </div>
         <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-top:4px;">
           <span>Solde CP avant demande :</span><b id="apercuSolde">-</b>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-top:4px;">
+          <span>Solde CP après demande :</span><b id="apercuSoldeApres">-</b>
         </div>
       </div>
 
@@ -863,6 +911,8 @@
       let total = 0;
       ranges.forEach(r => { total += countJoursOuvresRange(r.start, r.end); });
       document.getElementById('apercuJoursOuvres').innerText = ranges.length ? `${total} jour(s)` : '-';
+      const apres = Math.max(0, soldeGlobalActuel - total);
+      document.getElementById('apercuSoldeApres').innerText = ranges.length ? `${apres} jour(s)` : '-';
     }
 
     function envoyerDemande(btn) {
@@ -1017,6 +1067,19 @@
       renderCalendar();
     }
 
+    function allerAujourdhui() {
+      currentDate = new Date();
+      setViewMode('month');
+    }
+
+    function openParametresModal() {
+      document.getElementById('parametresModal').classList.add('visible');
+    }
+
+    function closeParametresModal() {
+      document.getElementById('parametresModal').classList.remove('visible');
+    }
+
     function getDayAttributes(year, month, day, feries) {
       const dateObj = new Date(year, month, day);
       const dayOfWeek = dateObj.getDay();
@@ -1029,6 +1092,7 @@
       const isConge = estCongePose(dateStr);
       const isCongeValide = congesValides.includes(dateStr);
       const isVacances = vacancesZoneB.some(v => dateStr >= v.start && dateStr <= v.end);
+      const isToday = dateStr === toISO(new Date());
 
       let isGarde = false;
       if (gardeConfig.enabled && isWeekend) {
@@ -1042,7 +1106,7 @@
         }
       });
 
-      return { dateStr, isWeekend, isFerie, isConge, isCongeValide, isVacances, isGarde };
+      return { dateStr, isWeekend, isFerie, isConge, isCongeValide, isVacances, isGarde, isToday };
     }
 
     function renderCalendar() {
@@ -1082,7 +1146,7 @@
       }
 
       for (let day = 1; day <= lastDay.getDate(); day++) {
-        const { dateStr, isWeekend, isFerie, isConge, isCongeValide, isVacances, isGarde } = getDayAttributes(year, month, day, feries);
+        const { dateStr, isWeekend, isFerie, isConge, isCongeValide, isVacances, isGarde, isToday } = getDayAttributes(year, month, day, feries);
 
         const afficherFerie = isFerie && affichage.ferie;
         const afficherVacances = isVacances && affichage.vacances;
@@ -1093,6 +1157,7 @@
         cell.className = 'day';
         if (isWeekend) cell.classList.add('is-weekend');
         if (afficherConge) cell.classList.add('is-conge');
+        if (isToday) cell.classList.add('is-today');
 
         cell.onclick = () => toggleConges(dateStr);
 
@@ -1158,7 +1223,7 @@
         }
 
         for (let day = 1; day <= lastDay.getDate(); day++) {
-          const { dateStr, isWeekend, isFerie, isConge, isVacances, isGarde } = getDayAttributes(year, month, day, feries);
+          const { dateStr, isWeekend, isFerie, isConge, isVacances, isGarde, isToday } = getDayAttributes(year, month, day, feries);
 
           const afficherFerie = isFerie && affichage.ferie;
           const afficherVacances = isVacances && affichage.vacances;
@@ -1169,6 +1234,7 @@
           cell.className = 'mini-day';
           if (isWeekend) cell.classList.add('is-weekend');
           if (afficherConge) cell.classList.add('is-conge');
+          if (isToday) cell.classList.add('is-today');
 
           const indicateurs = [];
           if (afficherFerie) indicateurs.push('<span class="day-indicator-segment" style="background: var(--color-ferie);"></span>');
