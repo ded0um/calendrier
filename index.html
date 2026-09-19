@@ -71,6 +71,12 @@
       font-size: 0.9rem;
     }
 
+    .view-toggle {
+      display: flex;
+      gap: 4px;
+      margin-left: 10px;
+    }
+
     input[type="checkbox"] {
       accent-color: var(--accent);
       width: 16px;
@@ -226,12 +232,22 @@
 
     /* Visual States */
     .day.is-weekend, .mini-day.is-weekend { background: var(--color-weekend); }
-    .day.is-vacances, .mini-day.is-vacances { border-bottom: 4px solid var(--color-vacances-zoneB); }
-    .day.is-ferie, .mini-day.is-ferie { border-bottom: 4px solid var(--color-ferie); }
-    .day.is-garde-we, .mini-day.is-garde-we { border-bottom: 4px solid var(--color-garde); }
     .day.is-conge, .mini-day.is-conge { background: var(--color-conge) !important; color: #fff; font-weight: 700; }
 
     .badge-conge { background: #fff; color: var(--color-conge); }
+
+    /* Indicateurs cumulables (férié / vacances / garde) sous forme de bandeau bas segmenté */
+    .day-indicators, .mini-day-indicators {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      overflow: hidden;
+    }
+    .day-indicators { height: 4px; border-radius: 0 0 6px 6px; }
+    .mini-day-indicators { height: 3px; border-radius: 0 0 3px 3px; }
+    .day-indicator-segment { flex: 1; }
 
     /* Dashboard CP Counter */
     .cp-dashboard {
@@ -337,6 +353,40 @@
       justify-content: space-between;
       align-items: center;
     }
+
+    /* ==== Optimisations pour mobile (mise en page uniquement) ==== */
+    @media (max-width: 640px) {
+      body { padding: 10px; }
+
+      .toolbar { flex-direction: column; align-items: stretch; gap: 10px; }
+      .toolbar-left, .toolbar-right { flex-direction: column; align-items: stretch; width: 100%; gap: 8px; }
+      .toolbar-left > .btn, .toolbar-right > .btn { width: 100%; text-align: center; }
+      .view-toggle { margin-left: 0; width: 100%; }
+      .view-toggle .btn { flex: 1; }
+
+      .legend { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+      .legend-item { font-size: 0.75rem; }
+      .legend input[type="checkbox"] { width: 20px; height: 20px; }
+
+      .cp-dashboard { grid-template-columns: 1fr; gap: 10px; }
+      .cp-card { padding: 12px; }
+
+      .calendar-card { padding: 12px; }
+      .month-title { font-size: 1rem; }
+      .day { min-height: 60px; padding: 4px; }
+      .day-number { font-size: 0.75rem; }
+      .weekday { font-size: 0.7rem; padding: 4px 0; }
+      .grid-days, .grid-weekdays { gap: 3px; }
+
+      .annual-grid { gap: 10px; }
+      .mini-month { padding: 8px; }
+
+      .modal { padding: 14px; gap: 10px; width: 95%; }
+    }
+
+    @media (max-width: 420px) {
+      .btn-text { display: none; }
+    }
   </style>
 </head>
 <body>
@@ -347,52 +397,36 @@
       <button class="btn btn-icon" onclick="openGardeModal()" title="Configurer la garde de Robin">
         ⚙️ Robin
       </button>
-      <div class="toolbar-group">
-        <input type="checkbox" id="toggleVacances" onchange="renderCalendar()" checked>
-        <label for="toggleVacances">Vacances scolaires (Zone B)</label>
-      </div>
-      <div style="display: flex; gap: 4px; margin-left: 10px;">
+      <div class="view-toggle">
         <button id="btnViewMonth" class="btn btn-active" onclick="setViewMode('month')">Mois</button>
         <button id="btnViewYear" class="btn" onclick="setViewMode('year')">Année</button>
       </div>
     </div>
 
     <div class="toolbar-right">
-      <button class="btn btn-icon" onclick="openDemandeModal()" title="Nouvelle demande de CP">📤 Demande CP</button>
-      <button class="btn btn-validate" onclick="openCpSummaryModal()">✔ Valider mes CP</button>
+      <button class="btn btn-validate" onclick="openDemandeModal()" title="Nouvelle demande de CP">Demande CP</button>
     </div>
   </div>
 
   <!-- Légende -->
   <div class="legend">
-    <div class="legend-item"><div class="legend-box" style="background: var(--color-weekend);"></div> Week-end</div>
-    <div class="legend-item"><div class="legend-box" style="background: var(--color-ferie);"></div> Jour Férié</div>
-    <div class="legend-item"><div class="legend-box" style="background: var(--color-vacances-zoneB);"></div> Vacances Zone B</div>
-    <div class="legend-item"><div class="legend-box" style="background: var(--color-garde);"></div> Garde Robin</div>
-    <div class="legend-item"><div class="legend-box" style="background: var(--color-conge);"></div> Congé Posé</div>
+    <div class="legend-item">
+      <input type="checkbox" id="toggleFerie" checked onchange="renderCalendar()">
+      <div class="legend-box" style="background: var(--color-ferie);"></div> Jour Férié
+    </div>
+    <div class="legend-item">
+      <input type="checkbox" id="toggleVacances" checked onchange="renderCalendar()">
+      <div class="legend-box" style="background: var(--color-vacances-zoneB);"></div> Vacances Zone B
+    </div>
+    <div class="legend-item">
+      <input type="checkbox" id="toggleGarde" checked onchange="renderCalendar()">
+      <div class="legend-box" style="background: var(--color-garde);"></div> Garde Robin
+    </div>
+    <div class="legend-item">
+      <input type="checkbox" id="toggleConge" checked onchange="renderCalendar()">
+      <div class="legend-box" style="background: var(--color-conge);"></div> Congé Posé
+    </div>
   </div>
-
-  <!-- Calendrier -->
-  <main class="calendar-card">
-    <div class="calendar-header">
-      <button class="btn" onclick="changePeriod(-1)">◄ Précédent</button>
-      <span id="periodDisplay" class="month-title">---</span>
-      <button class="btn" onclick="changePeriod(1)">Suivant ►</button>
-    </div>
-
-    <!-- Vue Mensuelle -->
-    <div id="monthlyView">
-      <div class="grid-weekdays">
-        <div class="weekday">Lun</div><div class="weekday">Mar</div><div class="weekday">Mer</div>
-        <div class="weekday">Jeu</div><div class="weekday">Ven</div><div class="weekday">Sam</div>
-        <div class="weekday">Dim</div>
-      </div>
-      <div id="calendarGrid" class="grid-days" style="margin-top: 8px;"></div>
-    </div>
-
-    <!-- Vue Annuelle -->
-    <div id="annualView" class="annual-grid" style="display: none;"></div>
-  </main>
 
   <!-- Tableau de Bord des Congés Payés -->
   <section class="cp-dashboard">
@@ -434,6 +468,28 @@
       </div>
     </div>
   </section>
+
+  <!-- Calendrier -->
+  <main class="calendar-card">
+    <div class="calendar-header">
+      <button class="btn" onclick="changePeriod(-1)">◄ <span class="btn-text">Précédent</span></button>
+      <span id="periodDisplay" class="month-title">---</span>
+      <button class="btn" onclick="changePeriod(1)"><span class="btn-text">Suivant</span> ►</button>
+    </div>
+
+    <!-- Vue Mensuelle -->
+    <div id="monthlyView">
+      <div class="grid-weekdays">
+        <div class="weekday">Lun</div><div class="weekday">Mar</div><div class="weekday">Mer</div>
+        <div class="weekday">Jeu</div><div class="weekday">Ven</div><div class="weekday">Sam</div>
+        <div class="weekday">Dim</div>
+      </div>
+      <div id="calendarGrid" class="grid-days" style="margin-top: 8px;"></div>
+    </div>
+
+    <!-- Vue Annuelle -->
+    <div id="annualView" class="annual-grid" style="display: none;"></div>
+  </main>
 
   <!-- Modale Configuration Robin -->
   <div id="gardeModal" class="modal-overlay">
@@ -536,6 +592,11 @@
       <div class="form-group">
         <span class="form-label">Nombre d'enfants scolarisés</span>
         <input type="number" id="demandeEnfants" class="btn" style="width: 100%;" min="0">
+      </div>
+
+      <div class="form-group">
+        <span class="form-label">Destinataires du mail</span>
+        <div id="demandeDestinataires" style="display: flex; flex-direction: column; gap: 6px;"></div>
       </div>
 
       <div class="form-group" style="background: var(--bg-panel); padding: 12px; border-radius: 6px;">
@@ -744,8 +805,52 @@
         });
       }
 
+      chargerDestinataires();
       majApercuDemande();
       document.getElementById('demandeModal').classList.add('visible');
+    }
+
+    function chargerDestinataires() {
+      const container = document.getElementById('demandeDestinataires');
+      container.innerHTML = '<div style="color:var(--text-muted); font-size:0.8rem;">Chargement...</div>';
+
+      fetch(SCRIPT_URL + '?action=destinataires')
+        .then(r => r.json())
+        .then(emails => {
+          container.innerHTML = '';
+          if (!emails.length) {
+            container.innerHTML = '<div style="color:var(--text-muted); font-size:0.8rem;">Aucun destinataire enregistré dans la feuille.</div>';
+            return;
+          }
+          emails.forEach(email => {
+            const row = document.createElement('div');
+            row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; gap:8px;';
+            row.innerHTML = `
+              <span style="font-size:0.85rem;">${email}</span>
+              <select class="btn destinataire-select" data-email="${email}" style="width:auto;">
+                <option value="none">Ne pas envoyer</option>
+                <option value="to">À</option>
+                <option value="cc">Cc</option>
+                <option value="bcc">Cci</option>
+              </select>
+            `;
+            container.appendChild(row);
+          });
+        })
+        .catch(() => {
+          container.innerHTML = '<div style="color:var(--color-absence); font-size:0.8rem;">Impossible de charger les destinataires.</div>';
+        });
+    }
+
+    function getDestinatairesSelectionnes() {
+      const selects = document.querySelectorAll('#demandeDestinataires .destinataire-select');
+      const result = [];
+      selects.forEach(sel => {
+        if (sel.value !== 'none') {
+          result.push({ email: sel.dataset.email, type: sel.value });
+        }
+      });
+      return result;
     }
 
     function closeDemandeModal() {
@@ -764,6 +869,7 @@
       const periode = document.getElementById('demandePeriode').value.trim();
       const enfants = document.getElementById('demandeEnfants').value || '0';
       const ranges = getPendingRanges();
+      const destinataires = getDestinatairesSelectionnes();
 
       if (ranges.length === 0) return;
       if (!periode) {
@@ -802,7 +908,8 @@
           periode: periode,
           joursOuvres: joursOuvres,
           enfantsScolarises: enfants,
-          dateDemande: dateDemande
+          dateDemande: dateDemande,
+          destinataires: destinataires
         };
 
         fetch(SCRIPT_URL, {
@@ -815,11 +922,14 @@
             item.className = 'cp-list-item';
             if (reponse.succes) {
               congesValides.push(...getDatesEntre(payload.dateDebut, payload.dateFin));
-              item.innerHTML = `<span>✅ ${payload.dateDebut} → ${payload.dateFin}</span><a href="${reponse.pdfUrl}" target="_blank" style="color:var(--accent);">PDF</a>`;
+              item.style.flexWrap = 'wrap';
+              item.style.gap = '8px';
+              item.innerHTML = `<span>✅ ${payload.dateDebut} → ${payload.dateFin}</span><a href="${reponse.pdfUrl}" target="_blank" style="color:var(--accent);">PDF</a><a href="https://mail.google.com/mail/u/0/#drafts" target="_blank" style="color:var(--accent);">Brouillon Gmail</a>`;
+              resultats.appendChild(item);
             } else {
               item.innerHTML = `<span style="color:var(--color-absence);">❌ ${payload.dateDebut} → ${payload.dateFin} : ${reponse.erreur}</span>`;
+              resultats.appendChild(item);
             }
-            resultats.appendChild(item);
             index++;
             envoyerSuivant();
           })
@@ -907,7 +1017,7 @@
       renderCalendar();
     }
 
-    function getDayAttributes(year, month, day, feries, showVacances) {
+    function getDayAttributes(year, month, day, feries) {
       const dateObj = new Date(year, month, day);
       const dayOfWeek = dateObj.getDay();
       const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -918,11 +1028,7 @@
       const isFerie = feries.includes(dateStr);
       const isConge = estCongePose(dateStr);
       const isCongeValide = congesValides.includes(dateStr);
-
-      let isVacances = false;
-      if (showVacances) {
-        isVacances = vacancesZoneB.some(v => dateStr >= v.start && dateStr <= v.end);
-      }
+      const isVacances = vacancesZoneB.some(v => dateStr >= v.start && dateStr <= v.end);
 
       let isGarde = false;
       if (gardeConfig.enabled && isWeekend) {
@@ -941,20 +1047,25 @@
 
     function renderCalendar() {
       const year = currentDate.getFullYear();
-      const showVacances = document.getElementById('toggleVacances').checked;
       const feries = getJoursFeries(year);
+      const affichage = {
+        ferie: document.getElementById('toggleFerie').checked,
+        vacances: document.getElementById('toggleVacances').checked,
+        garde: document.getElementById('toggleGarde').checked,
+        conge: document.getElementById('toggleConge').checked
+      };
 
       if (viewMode === 'month') {
         const month = currentDate.getMonth();
         document.getElementById('periodDisplay').innerText = `${monthNames[month]} ${year}`;
-        renderMonthlyGrid(year, month, feries, showVacances);
+        renderMonthlyGrid(year, month, feries, affichage);
       } else {
         document.getElementById('periodDisplay').innerText = `Année ${year}`;
-        renderAnnualGrid(year, feries, showVacances);
+        renderAnnualGrid(year, feries, affichage);
       }
     }
 
-    function renderMonthlyGrid(year, month, feries, showVacances) {
+    function renderMonthlyGrid(year, month, feries, affichage) {
       const grid = document.getElementById('calendarGrid');
       grid.innerHTML = '';
 
@@ -971,21 +1082,29 @@
       }
 
       for (let day = 1; day <= lastDay.getDate(); day++) {
-        const { dateStr, isWeekend, isFerie, isConge, isCongeValide, isVacances, isGarde } = getDayAttributes(year, month, day, feries, showVacances);
+        const { dateStr, isWeekend, isFerie, isConge, isCongeValide, isVacances, isGarde } = getDayAttributes(year, month, day, feries);
+
+        const afficherFerie = isFerie && affichage.ferie;
+        const afficherVacances = isVacances && affichage.vacances;
+        const afficherGarde = isGarde && affichage.garde;
+        const afficherConge = isConge && affichage.conge;
 
         const cell = document.createElement('div');
         cell.className = 'day';
         if (isWeekend) cell.classList.add('is-weekend');
-        if (isFerie) cell.classList.add('is-ferie');
-        if (isVacances) cell.classList.add('is-vacances');
-        if (isGarde) cell.classList.add('is-garde-we');
-        if (isConge) cell.classList.add('is-conge');
+        if (afficherConge) cell.classList.add('is-conge');
 
         cell.onclick = () => toggleConges(dateStr);
 
+        const indicateurs = [];
+        if (afficherFerie) indicateurs.push('<span class="day-indicator-segment" style="background: var(--color-ferie);"></span>');
+        if (afficherVacances) indicateurs.push('<span class="day-indicator-segment" style="background: var(--color-vacances-zoneB);"></span>');
+        if (afficherGarde) indicateurs.push('<span class="day-indicator-segment" style="background: var(--color-garde);"></span>');
+
         cell.innerHTML = `
           <span class="day-number">${day}</span>
-          ${isCongeValide ? '<span class="day-tag-envoye">🔒</span>' : ''}
+          ${afficherConge && isCongeValide ? '<span class="day-tag-envoye">🔒</span>' : ''}
+          ${indicateurs.length ? `<div class="day-indicators">${indicateurs.join('')}</div>` : ''}
         `;
 
         grid.appendChild(cell);
@@ -997,7 +1116,7 @@
       setViewMode('month');
     }
 
-    function renderAnnualGrid(year, feries, showVacances) {
+    function renderAnnualGrid(year, feries, affichage) {
       const container = document.getElementById('annualView');
       container.innerHTML = '';
 
@@ -1039,17 +1158,27 @@
         }
 
         for (let day = 1; day <= lastDay.getDate(); day++) {
-          const { dateStr, isWeekend, isFerie, isConge, isVacances, isGarde } = getDayAttributes(year, month, day, feries, showVacances);
+          const { dateStr, isWeekend, isFerie, isConge, isVacances, isGarde } = getDayAttributes(year, month, day, feries);
+
+          const afficherFerie = isFerie && affichage.ferie;
+          const afficherVacances = isVacances && affichage.vacances;
+          const afficherGarde = isGarde && affichage.garde;
+          const afficherConge = isConge && affichage.conge;
 
           const cell = document.createElement('div');
           cell.className = 'mini-day';
           if (isWeekend) cell.classList.add('is-weekend');
-          if (isFerie) cell.classList.add('is-ferie');
-          if (isVacances) cell.classList.add('is-vacances');
-          if (isGarde) cell.classList.add('is-garde-we');
-          if (isConge) cell.classList.add('is-conge');
+          if (afficherConge) cell.classList.add('is-conge');
 
-          cell.innerText = day;
+          const indicateurs = [];
+          if (afficherFerie) indicateurs.push('<span class="day-indicator-segment" style="background: var(--color-ferie);"></span>');
+          if (afficherVacances) indicateurs.push('<span class="day-indicator-segment" style="background: var(--color-vacances-zoneB);"></span>');
+          if (afficherGarde) indicateurs.push('<span class="day-indicator-segment" style="background: var(--color-garde);"></span>');
+
+          cell.innerHTML = `
+            ${day}
+            ${indicateurs.length ? `<div class="mini-day-indicators">${indicateurs.join('')}</div>` : ''}
+          `;
           cell.title = dateStr;
           cell.onclick = (e) => {
             e.stopPropagation();
