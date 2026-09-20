@@ -1079,7 +1079,7 @@
       cpConfig.n = parseFloat(document.getElementById('inputCpN').value) || 0;
 
       let totalOuvresPoses = 0;
-      getTousLesConges().forEach(dStr => {
+      congesPoses.forEach(dStr => {
         if (isJourOuvreEffective(dStr)) {
           totalOuvresPoses++;
         }
@@ -1465,10 +1465,9 @@
 
     /* Regroupement des dates contiguës sous forme de périodes */
     function getCongesRanges() {
-      const tousLesConges = getTousLesConges();
-      if (tousLesConges.length === 0) return [];
+      if (congesPoses.length === 0) return [];
       
-      const sortedDates = [...tousLesConges].sort();
+      const sortedDates = [...congesPoses].sort();
       const ranges = [];
       
       let rangeStart = sortedDates[0];
@@ -1500,11 +1499,10 @@
       const listContainer = document.getElementById('cpSummaryList');
       listContainer.innerHTML = '';
 
-      const tousLesConges = getTousLesConges();
       const ranges = getCongesRanges();
       let totalOuvres = 0;
 
-      tousLesConges.forEach(dateStr => {
+      congesPoses.forEach(dateStr => {
         if (isJourOuvreEffective(dateStr)) totalOuvres++;
       });
 
@@ -1526,7 +1524,7 @@
           listContainer.appendChild(item);
         });
 
-        document.getElementById('cpSummaryCount').innerText = `Total : ${tousLesConges.length} jour(s) sélectionné(s) — dont ${totalOuvres} jour(s) ouvré(s) décompté(s)`;
+        document.getElementById('cpSummaryCount').innerText = `Total : ${congesPoses.length} jour(s) sélectionné(s) — dont ${totalOuvres} jour(s) ouvré(s) décompté(s)`;
       }
 
       document.getElementById('cpSummaryModal').classList.add('visible');
