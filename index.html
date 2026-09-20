@@ -251,6 +251,7 @@
       padding: 10px;
       cursor: pointer;
       transition: border-color 0.2s;
+      scroll-margin-top: 60px;
     }
 
     .mini-month:hover {
@@ -551,11 +552,13 @@
           <span class="cp-label">CP N-1</span>
           <input type="number" id="inputCpN1" class="cp-input-sm" value="0" min="0" step="0.5" oninput="updateCPData()">
           <span class="cp-sub">jours acquis</span>
+          <span class="cp-restant">Restant : <b id="restantCpN1Modal">0</b> j</span>
         </div>
         <div class="cp-row">
           <span class="cp-label">CP N</span>
           <input type="number" id="inputCpN" class="cp-input-sm" value="0" min="0" step="0.5" oninput="updateCPData()">
           <span class="cp-sub">jours acquis</span>
+          <span class="cp-restant">Restant : <b id="restantCpNModal">0</b> j</span>
         </div>
       </div>
 
@@ -1088,6 +1091,8 @@
 
       document.getElementById('restantCpN1').innerText = restantN1;
       document.getElementById('restantCpN').innerText = restantN;
+      document.getElementById('restantCpN1Modal').innerText = restantN1;
+      document.getElementById('restantCpNModal').innerText = restantN;
 
       let soldeGlobal = restantN1 + restantN;
       document.getElementById('soldeTotalGlobal').innerText = `${soldeGlobal} jour(s)`;
