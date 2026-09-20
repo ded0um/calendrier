@@ -47,9 +47,8 @@
     .toolbar {
       display: grid;
       grid-template-columns: 1fr auto 1fr;
-      grid-template-areas: "left center right" "summary summary summary";
       align-items: center;
-      gap: 12px 15px;
+      gap: 15px;
       background: var(--bg-card);
       padding: 15px;
       border: 1px solid var(--border);
@@ -57,22 +56,9 @@
       margin-bottom: 20px;
     }
 
-    .toolbar-left { grid-area: left; display: flex; align-items: center; justify-self: start; }
-    .toolbar-center { grid-area: center; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; justify-self: center; }
-    .toolbar-right { grid-area: right; display: flex; align-items: center; justify-self: end; }
-
-    .toolbar-cp-summary {
-      grid-area: summary;
-      display: flex;
-      justify-content: center;
-      gap: 16px;
-      flex-wrap: wrap;
-      font-size: 0.85rem;
-      font-weight: 600;
-      padding-top: 10px;
-      border-top: 1px solid var(--border);
-    }
-    .toolbar-cp-summary b { color: #fff; }
+    .toolbar-left { display: flex; align-items: center; justify-self: start; }
+    .toolbar-center { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; justify-self: center; }
+    .toolbar-right { display: flex; align-items: center; justify-self: end; }
 
     .toolbar-group {
       display: flex;
@@ -122,20 +108,7 @@
     }
     .toggle-vue-knob.annee { transform: translateX(100%); }
 
-    /* Badge flottant : solde CP disponible toujours visible, même en scrollant */
-    .badge-solde {
-      position: fixed;
-      bottom: 16px;
-      right: 16px;
-      background: var(--accent);
-      color: #000;
-      font-weight: 700;
-      padding: 10px 16px;
-      border-radius: 24px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-      z-index: 500;
-      font-size: 0.9rem;
-    }
+
 
     input[type="checkbox"] {
       accent-color: var(--accent);
@@ -187,17 +160,33 @@
       padding: 20px;
     }
 
-    .calendar-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 15px;
+    .calendar-sticky-top {
       position: sticky;
       top: 0;
       z-index: 10;
       background: var(--bg-card);
+      padding-bottom: 8px;
+      margin-bottom: 8px;
+    }
+
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       padding: 6px 0;
     }
+
+    .calendar-cp-summary {
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border-top: 1px solid var(--border);
+      padding-top: 6px;
+    }
+    .calendar-cp-summary b { color: #fff; }
 
     .month-title { font-size: 1.2rem; font-weight: 700; color: #fff; text-transform: capitalize; }
 
@@ -454,17 +443,24 @@
       body { padding: 10px; }
 
       .toolbar {
-        grid-template-columns: auto 1fr;
-        grid-template-areas: "left center" "right right" "summary summary";
-        gap: 8px 10px;
-        padding: 10px;
+        display: flex;
+        flex-wrap: nowrap;
+        justify-content: space-between;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        gap: 6px;
+        padding: 8px 10px;
         margin-bottom: 10px;
       }
-      .toolbar-left { justify-self: start; }
-      .toolbar-center { justify-self: start; justify-content: flex-start; width: auto; }
-      .toolbar-right { justify-self: stretch; width: 100%; }
-      .toolbar-right > .btn { width: 100%; text-align: center; }
-      .toolbar-cp-summary { justify-content: space-between; font-size: 0.8rem; padding-top: 8px; }
+      .toolbar-left, .toolbar-center, .toolbar-right {
+        flex-shrink: 0;
+        flex-wrap: nowrap;
+      }
+      .toolbar-right > .btn { width: auto; white-space: nowrap; }
+      .toolbar .btn { padding: 5px 8px; font-size: 0.75rem; white-space: nowrap; }
+      .toggle-vue { width: 120px; height: 30px; }
+      .toggle-vue-option { font-size: 0.7rem; line-height: 24px; }
+      .toggle-vue-knob { height: 24px; }
 
       .legend { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
       .legend-item { font-size: 0.75rem; }
@@ -493,7 +489,7 @@
   <!-- Options et Filtres -->
   <div class="toolbar">
     <div class="toolbar-left">
-      <button class="btn btn-icon" onclick="openParametresModal()" title="Paramètres">⚙️</button>
+      <button class="btn btn-icon" onclick="openParametresModal()" title="Paramètres">☰</button>
     </div>
 
     <div class="toolbar-center">
@@ -506,22 +502,23 @@
     </div>
 
     <div class="toolbar-right">
-      <button class="btn btn-validate" onclick="openDemandeModal()" title="Nouvelle demande de CP">✔ Demande CP</button>
-    </div>
-
-    <div class="toolbar-cp-summary">
-      <span>N-1 : <b id="restantCpN1">0</b> j</span>
-      <span>N : <b id="restantCpN">0</b> j</span>
-      <span>Disponible : <b id="soldeTotalGlobal" class="highlight-text">0 jour(s)</b></span>
+      <button class="btn btn-validate" onclick="openDemandeModal()" title="Nouvelle demande de CP">✔ Envoyer</button>
     </div>
   </div>
 
   <!-- Calendrier -->
   <main class="calendar-card">
-    <div class="calendar-header">
-      <button class="btn" onclick="changePeriod(-1)">◄ <span class="btn-text">Précédent</span></button>
-      <span id="periodDisplay" class="month-title">---</span>
-      <button class="btn" onclick="changePeriod(1)"><span class="btn-text">Suivant</span> ►</button>
+    <div class="calendar-sticky-top">
+      <div class="calendar-header">
+        <button class="btn" onclick="changePeriod(-1)">◄ <span class="btn-text">Précédent</span></button>
+        <span id="periodDisplay" class="month-title">---</span>
+        <button class="btn" onclick="changePeriod(1)"><span class="btn-text">Suivant</span> ►</button>
+      </div>
+      <div class="calendar-cp-summary">
+        <span>N-1 : <b id="badgeN1">0</b> j</span>
+        <span>N : <b id="badgeN">0</b> j</span>
+        <span>Disponible : <b id="badgeDispo">0</b> j</span>
+      </div>
     </div>
 
     <!-- Vue Mensuelle -->
@@ -1089,14 +1086,13 @@
       let resteAImputerN = Math.max(0, totalOuvresPoses - cpConfig.n1);
       let restantN = Math.max(0, cpConfig.n - resteAImputerN);
 
-      document.getElementById('restantCpN1').innerText = restantN1;
-      document.getElementById('restantCpN').innerText = restantN;
       document.getElementById('restantCpN1Modal').innerText = restantN1;
       document.getElementById('restantCpNModal').innerText = restantN;
 
       let soldeGlobal = restantN1 + restantN;
-      document.getElementById('soldeTotalGlobal').innerText = `${soldeGlobal} jour(s)`;
-      document.getElementById('badgeSolde').innerText = `${soldeGlobal} j dispo`;
+      document.getElementById('badgeN1').innerText = restantN1;
+      document.getElementById('badgeN').innerText = restantN;
+      document.getElementById('badgeDispo').innerText = soldeGlobal;
       soldeGlobalActuel = soldeGlobal;
     }
 
@@ -1543,8 +1539,5 @@
       initNavigationTactile();
     };
   </script>
-  <!-- Badge flottant : solde CP disponible, toujours visible -->
-  <div id="badgeSolde" class="badge-solde">0 j dispo</div>
-
 </body>
 </html>
