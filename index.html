@@ -122,6 +122,21 @@
     }
     .toggle-vue-knob.annee { transform: translateX(100%); }
 
+    /* Badge flottant : solde CP disponible toujours visible, même en scrollant */
+    .badge-solde {
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      background: var(--accent);
+      color: #000;
+      font-weight: 700;
+      padding: 10px 16px;
+      border-radius: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      z-index: 500;
+      font-size: 0.9rem;
+    }
+
     input[type="checkbox"] {
       accent-color: var(--accent);
       width: 16px;
@@ -534,12 +549,12 @@
         <span class="form-label" style="color: var(--accent); font-weight: 700;">Congés Payés</span>
         <div class="cp-row" style="margin-top: 8px;">
           <span class="cp-label">CP N-1</span>
-          <input type="number" id="inputCpN1" class="cp-input-sm" value="0" min="0" step="0.5" onchange="updateCPData()">
+          <input type="number" id="inputCpN1" class="cp-input-sm" value="0" min="0" step="0.5" oninput="updateCPData()">
           <span class="cp-sub">jours acquis</span>
         </div>
         <div class="cp-row">
           <span class="cp-label">CP N</span>
-          <input type="number" id="inputCpN" class="cp-input-sm" value="0" min="0" step="0.5" onchange="updateCPData()">
+          <input type="number" id="inputCpN" class="cp-input-sm" value="0" min="0" step="0.5" oninput="updateCPData()">
           <span class="cp-sub">jours acquis</span>
         </div>
       </div>
@@ -1076,6 +1091,7 @@
 
       let soldeGlobal = restantN1 + restantN;
       document.getElementById('soldeTotalGlobal').innerText = `${soldeGlobal} jour(s)`;
+      document.getElementById('badgeSolde').innerText = `${soldeGlobal} j dispo`;
       soldeGlobalActuel = soldeGlobal;
     }
 
@@ -1090,6 +1106,19 @@
       document.getElementById('annualView').style.display = mode === 'year' ? 'grid' : 'none';
       
       renderCalendar();
+
+      if (mode === 'year') {
+        requestAnimationFrame(() => scrollVersMoisActuel());
+      }
+    }
+
+    function scrollVersMoisActuel() {
+      const maintenant = new Date();
+      if (currentDate.getFullYear() !== maintenant.getFullYear()) return;
+      const cible = document.querySelector(`.mini-month[data-month="${maintenant.getMonth()}"]`);
+      if (cible) {
+        cible.scrollIntoView({ block: 'start', behavior: 'auto' });
+      }
     }
 
     function basculerVue() {
@@ -1174,6 +1203,7 @@
     }
 
     function closeParametresModal() {
+      updateCPData();
       document.getElementById('parametresModal').classList.remove('visible');
     }
 
@@ -1287,6 +1317,7 @@
       for (let month = 0; month < 12; month++) {
         const miniMonth = document.createElement('div');
         miniMonth.className = 'mini-month';
+        miniMonth.dataset.month = month;
         miniMonth.onclick = () => selectMonthFromAnnual(month);
 
         const title = document.createElement('div');
@@ -1509,5 +1540,8 @@
       initNavigationTactile();
     };
   </script>
+  <!-- Badge flottant : solde CP disponible, toujours visible -->
+  <div id="badgeSolde" class="badge-solde">0 j dispo</div>
+
 </body>
 </html>
