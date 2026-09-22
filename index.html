@@ -784,9 +784,11 @@
 
     let vacancesZoneB = vacancesZoneBSecours;
 
-    // API ouverte du Ministère de l'Éducation nationale (data.education.gouv.fr),
-    // filtrée sur l'académie d'Amiens (zone B). Voir data.gouv.fr/dataservices/api-calendrier-scolaire
-    const API_CALENDRIER_SCOLAIRE = "https://data.education.gouv.fr/api/v2/catalog/datasets/fr-en-calendrier-scolaire/records?where=location%3D%22Amiens%22&limit=100";
+    // API ouverte du Ministère de l'Éducation nationale (data.education.gouv.fr).
+    // Pas de filtre côté serveur (le nom exact des champs n'est pas garanti) :
+    // le tri se fait côté client dans extrairePeriodeVacances/chargerVacancesZoneB.
+    // Voir data.gouv.fr/dataservices/api-calendrier-scolaire
+    const API_CALENDRIER_SCOLAIRE = "https://data.education.gouv.fr/api/v2/catalog/datasets/fr-en-calendrier-scolaire/records?limit=100";
 
     // Lecture tolérante : on ne suppose pas le nom exact des champs renvoyés par
     // l'API (ça peut varier selon la version), on cherche par mots-clés.
@@ -811,6 +813,8 @@
           return r.json();
         })
         .then(data => {
+          console.log('Vacances scolaires — réponse brute de l\'API :', data);
+
           const enregistrements = Array.isArray(data.results)
             ? data.results
             : (Array.isArray(data.records) ? data.records.map(r => r.fields || r) : []);
