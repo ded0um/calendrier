@@ -738,6 +738,44 @@
     let congesValides = []; // dates issues des demandes déjà enregistrées dans la feuille (lecture seule)
     let soldeGlobalActuel = 0;
 
+    // Vacances scolaires officielles Zone B (API Ministère de l'Éducation Nationale)
+    let vacancesZoneB = [];
+    const API_VACANCES_ZONE_B =
+      "https://data.education.gouv.fr/api/explore/v2.0/catalog/datasets/fr-en-calendrier-scolaire/records";
+
+    async function chargerVacancesZoneB() {
+      const params = new URLSearchParams({
+        select: "description,start_date,end_date,zone",
+        where: 'zone="B"',
+        order_by: "start_date ASC",
+        limit: "1000"
+      });
+
+      try {
+        const response = await fetch(`${API_VACANCES_ZONE_B}?${params}`);
+
+        if (!response.ok) {
+          throw new Error(`Erreur API : ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        vacancesZoneB = (data.results || [])
+          .filter(entree => entree.description && entree.description.toLowerCase().includes("vacances"))
+          .map(entree => ({
+            start: entree.start_date ? entree.start_date.substring(0, 10) : null,
+            end: entree.end_date ? entree.end_date.substring(0, 10) : null
+          }))
+          .filter(entree => entree.start && entree.end);
+
+        renderCalendar();
+      } catch (error) {
+        console.error("Impossible de charger les vacances scolaires officielles Zone B :", error);
+        vacancesZoneB = [];
+        renderCalendar();
+      }
+    }
+
     const monthNames = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
     const dayNames = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
 
@@ -763,15 +801,6 @@
       const fmt = d => d.toISOString().split('T')[0];
       return [...feries, fmt(lundiPaques), fmt(ascension), fmt(lundiPentecote)];
     }
-
-    // Vacances Scolaires Zone B
-    const vacancesZoneB = [
-      { start: "2026-02-07", end: "2026-02-23" },
-      { start: "2026-04-04", end: "2026-04-20" },
-      { start: "2026-07-04", end: "2026-08-31" },
-      { start: "2026-10-17", end: "2026-11-02" },
-      { start: "2026-12-19", end: "2027-01-04" }
-    ];
 
     function getISOWeekNumber(d) {
       const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
@@ -1533,9 +1562,11 @@
     window.onload = function() {
       document.getElementById('inputCpN1').value = cpConfig.n1;
       document.getElementById('inputCpN').value = cpConfig.n;
+
       renderCalendar();
       updateCPData();
       chargerCongesValides();
+      chargerVacancesZoneB();
       initNavigationTactile();
     };
   </script>
