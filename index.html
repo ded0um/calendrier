@@ -813,7 +813,9 @@
           return r.json();
         })
         .then(data => {
-          console.log('Vacances scolaires — réponse brute de l\'API :', data);
+          console.log('Vacances scolaires — clés reçues :', Object.keys(data).join(', '));
+          console.log('Vacances scolaires — extrait JSON (copie-colle-moi cette ligne) :',
+            JSON.stringify(data).slice(0, 1500));
 
           const enregistrements = Array.isArray(data.results)
             ? data.results
