@@ -14,7 +14,7 @@
       --text-main: #c9d1d9;
       --text-muted: #8b949e;
       --accent: #ff8c00;
-
+      
       --color-weekend: #1c2128;
       --color-ferie: #702a00;
       --color-vacances-zoneB: #1b5e20;
@@ -720,15 +720,8 @@
       "https://data.education.gouv.fr/api/explore/v2.1/catalog/datasets/fr-en-calendrier-scolaire/records";
 
     async function chargerVacancesZoneB() {
-      const params = new URLSearchParams({
-        select: "description,start_date,end_date,zones",
-        where: 'zones="Zone B"',
-        order_by: "start_date ASC",
-        limit: "1000"
-      });
-
       try {
-        const response = await fetch(`${API_VACANCES_ZONE_B}?${params.toString()}`);
+        const response = await fetch(`${API_VACANCES_ZONE_B}?limit=1000`);
 
         if (!response.ok) {
           throw new Error(`Erreur API : ${response.status}`);
@@ -737,6 +730,13 @@
         const data = await response.json();
 
         vacancesZoneB = (data.results || [])
+          .filter(entree => {
+            const zones = Array.isArray(entree.zones)
+              ? entree.zones
+              : [entree.zones];
+
+            return zones.some(zone => String(zone).trim().toLowerCase() === "zone b");
+          })
           .filter(entree =>
             entree.description &&
             entree.description.toLowerCase().includes("vacances") &&
@@ -748,7 +748,7 @@
             end: entree.end_date.substring(0, 10)
           }));
 
-        console.log("Vacances Zone B chargées :", vacancesZoneB);
+        console.log("Vacances officielles Zone B chargées :", vacancesZoneB);
         renderCalendar();
       } catch (error) {
         console.error("Impossible de charger les vacances scolaires officielles Zone B :", error);
@@ -1467,10 +1467,10 @@
 
     function getCongesRanges() {
       if (congesPoses.length === 0) return;
-      
+
       const sortedDates = [...congesPoses].sort();
       const ranges = [];
-      
+
       let rangeStart = sortedDates[0];
       let prevDate = new Date(sortedDates[0]);
 
