@@ -785,11 +785,32 @@
     let vacancesZoneB = vacancesZoneBSecours;
 
     // API ouverte du Ministère de l'Éducation nationale (data.education.gouv.fr).
-    // Filtrée sur la zone B, triée par date de début décroissante pour être sûr
-    // de récupérer les périodes les plus proches/futures dans les 100 premières lignes
-    // (le jeu de données contient ~2600 lignes réparties sur toutes les zones/académies
-    // depuis 2008). Voir data.gouv.fr/dataservices/api-calendrier-scolaire
-    const API_CALENDRIER_SCOLAIRE = "https://data.education.gouv.fr/api/v2/catalog/datasets/fr-en-calendrier-scolaire/records?where=zones%3D%22Zone%20B%22&order_by=start_date%20desc&limit=100";
+    // Le jeu de données contient ~2600 lignes réparties sur toutes les zones/académies
+    // depuis 2008, avec plusieurs types de lignes par période (vacances, rentrée,
+    // ponts...). On filtre sur la zone B ET sur une fenêtre d'années scolaires
+    // calculée à partir de la date du jour (année en cours -1 à +2), pour être sûr
+    // de couvrir l'année scolaire actuelle sans dépendre d'un tri/limit hasardeux.
+    // Voir data.gouv.fr/dataservices/api-calendrier-scolaire
+    function anneesScolairesAConsulter() {
+      const maintenant = new Date();
+      // Une nouvelle année scolaire commence fin août : avant ça, on est encore
+      // sur l'année scolaire qui a démarré l'année civile précédente.
+      const anneeDepart = maintenant.getMonth() >= 7 ? maintenant.getFullYear() : maintenant.getFullYear() - 1;
+      const annees = [];
+      for (let i = -1; i <= 2; i++) {
+        const a = anneeDepart + i;
+        annees.push(`${a}-${a + 1}`);
+      }
+      return annees;
+    }
+
+    function construireRequeteVacancesZoneB() {
+      const clauseAnnees = anneesScolairesAConsulter()
+        .map(a => `annee_scolaire="${a}"`)
+        .join(' or ');
+      const where = encodeURIComponent(`zones="Zone B" and (${clauseAnnees})`);
+      return `https://data.education.gouv.fr/api/v2/catalog/datasets/fr-en-calendrier-scolaire/records?where=${where}&limit=200`;
+    }
 
     // Convertit un horodatage ISO (ex: "2026-10-16T22:00:00+00:00") en date locale
     // "YYYY-MM-DD". Utilise le fuseau du navigateur (Europe/Paris pour l'utilisateur)
@@ -818,7 +839,7 @@
     }
 
     function chargerVacancesZoneB() {
-      fetch(API_CALENDRIER_SCOLAIRE)
+      fetch(construireRequeteVacancesZoneB())
         .then(r => {
           if (!r.ok) throw new Error('Réponse HTTP ' + r.status);
           return r.json();
@@ -836,7 +857,13 @@
 
           const periodes = enregistrements
             .map(extrairePeriodeVacances)
-            .filter(p => p.zone.includes('zone b') && p.description.includes('vacances') && p.start && p.end);
+            // On ne garde que les vraies plages "Vacances de ..." (on écarte les
+            // repères ponctuels "Début/Fin des vacances de ...", redondants).
+            .filter(p => p.zone.includes('zone b')
+              && p.description.includes('vacances')
+              && !p.description.includes('début')
+              && !p.description.includes('fin des')
+              && p.start && p.end);
 
           if (periodes.length > 0) {
             // Dédoublonnage (plusieurs académies de zone B partagent les mêmes dates)
