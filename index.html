@@ -14,12 +14,12 @@
       --text-main: #c9d1d9;
       --text-muted: #8b949e;
       --accent: #ff8c00;
-      
+
       --color-weekend: #1c2128;
       --color-ferie: #702a00;
-      --color-vacances-zoneB: #1b5e20; /* Vert au lieu du bleu */
+      --color-vacances-zoneB: #1b5e20;
       --color-conge: #1f6beb;
-      --color-garde: #b58900; /* Assombri */
+      --color-garde: #b58900;
       --color-presence: #238636;
       --color-absence: #da3633;
     }
@@ -43,7 +43,6 @@
       margin-bottom: 20px;
     }
 
-    /* Controls & Options Bar */
     .toolbar {
       display: grid;
       grid-template-columns: 1fr auto 1fr;
@@ -108,8 +107,6 @@
     }
     .toggle-vue-knob.annee { transform: translateX(100%); }
 
-
-
     input[type="checkbox"] {
       accent-color: var(--accent);
       width: 16px;
@@ -132,11 +129,10 @@
     .btn-icon { padding: 6px 10px; font-size: 1rem; }
     .btn-active { background: var(--accent); color: #000; font-weight: 700; border-color: var(--accent); }
     .btn-active:hover { background: #e07b00; border-color: #e07b00; }
-    .btn-validate { background: #1e6629; color: #fff; font-weight: 700; border-color: #1e6629; } /* Assombri */
+    .btn-validate { background: #1e6629; color: #fff; font-weight: 700; border-color: #1e6629; }
     .btn-validate:hover { background: #238636; border-color: #238636; }
     .btn:disabled { opacity: 0.6; cursor: default; }
 
-    /* Legend */
     .legend {
       display: flex;
       gap: 15px;
@@ -152,7 +148,6 @@
     .legend-item { display: flex; align-items: center; gap: 6px; }
     .legend-box { width: 14px; height: 14px; border-radius: 3px; border: 1px solid var(--border); }
 
-    /* Calendar Grid */
     .calendar-card {
       background: var(--bg-card);
       border: 1px solid var(--border);
@@ -226,7 +221,6 @@
     .day-label { font-size: 0.65rem; font-weight: 600; border-radius: 3px; padding: 2px 4px; text-align: center; line-height: 1.1; margin-top: 2px; }
     .day-tag-envoye { font-size: 0.6rem; opacity: 0.85; }
 
-    /* Annual View Grid */
     .annual-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -285,14 +279,12 @@
     .mini-day:hover { border-color: var(--accent); }
     .mini-day.empty { background: transparent; border-color: transparent; cursor: default; }
 
-    /* Visual States */
     .day.is-weekend, .mini-day.is-weekend { background: var(--color-weekend); }
     .day.is-conge, .mini-day.is-conge { background: var(--color-conge) !important; color: #fff; font-weight: 700; }
     .day.is-today, .mini-day.is-today { border: 2px solid var(--accent); }
 
     .badge-conge { background: #fff; color: var(--color-conge); }
 
-    /* Indicateurs cumulables (férié / vacances / garde) sous forme de bandeau bas segmenté */
     .day-indicators, .mini-day-indicators {
       position: absolute;
       left: 0;
@@ -305,7 +297,6 @@
     .mini-day-indicators { height: 3px; border-radius: 0 0 3px 3px; }
     .day-indicator-segment { flex: 1; }
 
-    /* Dashboard CP Counter */
     .cp-dashboard {
       margin-top: 12px;
     }
@@ -336,7 +327,6 @@
     .cp-value { font-size: 1.3rem; font-weight: 700; color: #fff; }
     .cp-value.highlight { color: var(--accent); }
 
-    /* Version compacte du tableau de bord CP */
     .cp-row {
       display: flex;
       align-items: center;
@@ -367,7 +357,6 @@
     .highlight-text { color: var(--accent); }
     .cp-footnote { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
 
-    /* Modals Overlay */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -418,7 +407,6 @@
       padding-top: 15px;
     }
 
-    /* Liste des CP Posés */
     .cp-list {
       max-height: 250px;
       overflow-y: auto;
@@ -438,7 +426,6 @@
       align-items: center;
     }
 
-    /* ==== Optimisations pour mobile (mise en page uniquement) ==== */
     @media (max-width: 640px) {
       body { padding: 10px; }
 
@@ -486,7 +473,6 @@
 </head>
 <body>
 
-  <!-- Options et Filtres -->
   <div class="toolbar">
     <div class="toolbar-left">
       <button class="btn btn-icon" onclick="openParametresModal()" title="Paramètres">☰</button>
@@ -506,7 +492,6 @@
     </div>
   </div>
 
-  <!-- Calendrier -->
   <main class="calendar-card">
     <div class="calendar-sticky-top">
       <div class="calendar-header">
@@ -521,7 +506,6 @@
       </div>
     </div>
 
-    <!-- Vue Mensuelle -->
     <div id="monthlyView">
       <div class="grid-weekdays">
         <div class="weekday">Lun</div><div class="weekday">Mar</div><div class="weekday">Mer</div>
@@ -531,11 +515,9 @@
       <div id="calendarGrid" class="grid-days" style="margin-top: 8px;"></div>
     </div>
 
-    <!-- Vue Annuelle -->
     <div id="annualView" class="annual-grid" style="display: none;"></div>
   </main>
 
-  <!-- Modale Paramètres -->
   <div id="parametresModal" class="modal-overlay">
     <div class="modal">
       <div class="modal-header">
@@ -591,7 +573,6 @@
     </div>
   </div>
 
-  <!-- Modale Configuration Robin -->
   <div id="gardeModal" class="modal-overlay">
     <div class="modal">
       <div class="modal-header">
@@ -653,7 +634,6 @@
     </div>
   </div>
 
-  <!-- Modale Liste des CP Posés -->
   <div id="cpSummaryModal" class="modal-overlay">
     <div class="modal">
       <div class="modal-header">
@@ -672,7 +652,6 @@
     </div>
   </div>
 
-  <!-- Modale Nouvelle Demande de CP -->
   <div id="demandeModal" class="modal-overlay">
     <div class="modal">
       <div class="modal-header">
@@ -722,9 +701,8 @@
 
   <script>
     let currentDate = new Date();
-    let viewMode = 'month'; // 'month' ou 'year'
-    
-    // Données de session (rien n'est conservé entre deux ouvertures de la page)
+    let viewMode = 'month';
+
     let congesPoses = [];
     let cpConfig = { n1: 0, n: 0 };
     let gardeConfig = {
@@ -733,26 +711,24 @@
       customPeriods: []
     };
 
-    // ==== Intégration Google Sheets / Apps Script (demandes de CP) ====
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxt0RC4EH_QN9NETDPcPfwIwJGo9v8IKWof8zzFs2rlEBDHysaAq0u5oysBGYl1HiO6/exec";
-    let congesValides = []; // dates issues des demandes déjà enregistrées dans la feuille (lecture seule)
+    let congesValides = [];
     let soldeGlobalActuel = 0;
 
-    // Vacances scolaires officielles Zone B (API Ministère de l'Éducation Nationale)
     let vacancesZoneB = [];
     const API_VACANCES_ZONE_B =
-      "https://data.education.gouv.fr/api/explore/v2.0/catalog/datasets/fr-en-calendrier-scolaire/records";
+      "https://data.education.gouv.fr/api/explore/v2.1/catalog/datasets/fr-en-calendrier-scolaire/records";
 
     async function chargerVacancesZoneB() {
       const params = new URLSearchParams({
-        select: "description,start_date,end_date,zone",
-        where: 'zone="B"',
+        select: "description,start_date,end_date,zones",
+        where: 'zones="Zone B"',
         order_by: "start_date ASC",
         limit: "1000"
       });
 
       try {
-        const response = await fetch(`${API_VACANCES_ZONE_B}?${params}`);
+        const response = await fetch(`${API_VACANCES_ZONE_B}?${params.toString()}`);
 
         if (!response.ok) {
           throw new Error(`Erreur API : ${response.status}`);
@@ -761,13 +737,18 @@
         const data = await response.json();
 
         vacancesZoneB = (data.results || [])
-          .filter(entree => entree.description && entree.description.toLowerCase().includes("vacances"))
+          .filter(entree =>
+            entree.description &&
+            entree.description.toLowerCase().includes("vacances") &&
+            entree.start_date &&
+            entree.end_date
+          )
           .map(entree => ({
-            start: entree.start_date ? entree.start_date.substring(0, 10) : null,
-            end: entree.end_date ? entree.end_date.substring(0, 10) : null
-          }))
-          .filter(entree => entree.start && entree.end);
+            start: entree.start_date.substring(0, 10),
+            end: entree.end_date.substring(0, 10)
+          }));
 
+        console.log("Vacances Zone B chargées :", vacancesZoneB);
         renderCalendar();
       } catch (error) {
         console.error("Impossible de charger les vacances scolaires officielles Zone B :", error);
@@ -779,7 +760,6 @@
     const monthNames = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
     const dayNames = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
 
-    // Calcul dynamique des jours fériés français
     function getJoursFeries(year) {
       const feries = [
         `${year}-01-01`, `${year}-05-01`, `${year}-05-08`, `${year}-07-14`,
@@ -792,7 +772,7 @@
       const m = Math.floor((a + 11 * h + 22 * l) / 451);
       const month = Math.floor((h + l - 7 * m + 114) / 31) - 1;
       const day = ((h + l - 7 * m + 114) % 31) + 1;
-      
+
       const paques = new Date(year, month, day);
       const lundiPaques = new Date(paques); lundiPaques.setDate(paques.getDate() + 1);
       const ascension = new Date(paques); ascension.setDate(paques.getDate() + 39);
@@ -810,7 +790,6 @@
       return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
     }
 
-    // ==== Fonctions liées à l'intégration Google Sheets (demandes de CP) ====
     function parseFR(dateFR) {
       const [j, m, a] = dateFR.split('/').map(Number);
       return new Date(a, m - 1, j);
@@ -1093,7 +1072,7 @@
     function isJourOuvreEffective(dateStr) {
       const parts = dateStr.split('-');
       const d = new Date(parts[0], parts[1] - 1, parts[2]);
-      const dayOfWeek = d.getDay(); // 0 = Dim, 6 = Sam
+      const dayOfWeek = d.getDay();
       if (dayOfWeek === 0 || dayOfWeek === 6) return false;
       const feries = getJoursFeries(d.getFullYear());
       if (feries.includes(dateStr)) return false;
@@ -1134,7 +1113,7 @@
 
       document.getElementById('monthlyView').style.display = mode === 'month' ? 'block' : 'none';
       document.getElementById('annualView').style.display = mode === 'year' ? 'grid' : 'none';
-      
+
       renderCalendar();
 
       if (mode === 'year') {
@@ -1169,7 +1148,6 @@
       setViewMode('month');
     }
 
-    /* Navigation tactile : le calendrier suit le doigt pendant le balayage */
     function getVueActive() {
       return viewMode === 'month' ? document.getElementById('calendarGrid') : document.getElementById('annualView');
     }
@@ -1417,7 +1395,6 @@
       }
     }
 
-    /* Modal Robin */
     function openGardeModal() {
       document.getElementById('modalEnableGarde').checked = gardeConfig.enabled;
       document.querySelector(`input[name="modalParity"][value="${gardeConfig.parity}"]`).checked = true;
@@ -1488,9 +1465,8 @@
       renderCalendar();
     }
 
-    /* Regroupement des dates contiguës sous forme de périodes */
     function getCongesRanges() {
-      if (congesPoses.length === 0) return [];
+      if (congesPoses.length === 0) return;
       
       const sortedDates = [...congesPoses].sort();
       const ranges = [];
@@ -1519,7 +1495,6 @@
       return `${parts[2]}/${parts[1]}/${parts[0]}`;
     }
 
-    /* Modal Récapitulatif CP Posés */
     function openCpSummaryModal() {
       const listContainer = document.getElementById('cpSummaryList');
       listContainer.innerHTML = '';
