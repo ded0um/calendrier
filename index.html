@@ -785,10 +785,21 @@
     let vacancesZoneB = vacancesZoneBSecours;
 
     // API ouverte du Ministère de l'Éducation nationale (data.education.gouv.fr).
-    // Pas de filtre côté serveur (le nom exact des champs n'est pas garanti) :
-    // le tri se fait côté client dans extrairePeriodeVacances/chargerVacancesZoneB.
-    // Voir data.gouv.fr/dataservices/api-calendrier-scolaire
-    const API_CALENDRIER_SCOLAIRE = "https://data.education.gouv.fr/api/v2/catalog/datasets/fr-en-calendrier-scolaire/records?limit=100";
+    // Filtrée sur la zone B, triée par date de début décroissante pour être sûr
+    // de récupérer les périodes les plus proches/futures dans les 100 premières lignes
+    // (le jeu de données contient ~2600 lignes réparties sur toutes les zones/académies
+    // depuis 2008). Voir data.gouv.fr/dataservices/api-calendrier-scolaire
+    const API_CALENDRIER_SCOLAIRE = "https://data.education.gouv.fr/api/v2/catalog/datasets/fr-en-calendrier-scolaire/records?where=zones%3D%22Zone%20B%22&order_by=start_date%20desc&limit=100";
+
+    // Convertit un horodatage ISO (ex: "2026-10-16T22:00:00+00:00") en date locale
+    // "YYYY-MM-DD". Utilise le fuseau du navigateur (Europe/Paris pour l'utilisateur)
+    // plutôt qu'un simple découpage du texte UTC, pour éviter un décalage d'un jour.
+    function isoVersDateLocale(isoString) {
+      if (!isoString) return '';
+      const d = new Date(isoString);
+      if (isNaN(d)) return '';
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
 
     // Lecture tolérante : on ne suppose pas le nom exact des champs renvoyés par
     // l'API (ça peut varier selon la version), on cherche par mots-clés.
@@ -800,8 +811,8 @@
         const cleMin = cle.toLowerCase();
         if (cleMin.includes('zone')) zone += ' ' + texte;
         if (cleMin.includes('description') || cleMin.includes('libelle')) description += ' ' + texte;
-        if (cleMin.includes('start') || cleMin.includes('debut')) debut = texte.slice(0, 10);
-        if (cleMin.includes('end') || cleMin.includes('fin')) fin = texte.slice(0, 10);
+        if (cleMin.includes('start') || cleMin.includes('debut')) debut = isoVersDateLocale(texte);
+        if (cleMin.includes('end') || cleMin.includes('fin')) fin = isoVersDateLocale(texte);
       }
       return { zone: zone.toLowerCase(), description: description.toLowerCase(), start: debut, end: fin };
     }
@@ -814,19 +825,29 @@
         })
         .then(data => {
           console.log('Vacances scolaires — clés reçues :', Object.keys(data).join(', '));
-          console.log('Vacances scolaires — extrait JSON (copie-colle-moi cette ligne) :',
-            JSON.stringify(data).slice(0, 1500));
 
+          // Structure réelle observée : data.records[].record.fields.{description,
+          // population, start_date, end_date, location, zones, annee_scolaire}
           const enregistrements = Array.isArray(data.results)
             ? data.results
-            : (Array.isArray(data.records) ? data.records.map(r => r.fields || r) : []);
+            : (Array.isArray(data.records)
+                ? data.records.map(r => (r.record && r.record.fields) || r.fields || r)
+                : []);
 
           const periodes = enregistrements
             .map(extrairePeriodeVacances)
             .filter(p => p.zone.includes('zone b') && p.description.includes('vacances') && p.start && p.end);
 
           if (periodes.length > 0) {
-            vacancesZoneB = periodes;
+            // Dédoublonnage (plusieurs académies de zone B partagent les mêmes dates)
+            const vues = new Set();
+            vacancesZoneB = periodes.filter(p => {
+              const cle = p.start + '|' + p.end;
+              if (vues.has(cle)) return false;
+              vues.add(cle);
+              return true;
+            });
+            console.log('Vacances scolaires — périodes zone B chargées depuis l\'API :', vacancesZoneB);
             renderCalendar();
           } else {
             console.warn("Vacances scolaires : réponse de l'API vide ou format inattendu, tableau de secours conservé.");
