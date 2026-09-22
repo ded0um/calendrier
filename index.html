@@ -787,9 +787,10 @@
     // API ouverte du Ministère de l'Éducation nationale (data.education.gouv.fr).
     // Le jeu de données contient ~2600 lignes réparties sur toutes les zones/académies
     // depuis 2008, avec plusieurs types de lignes par période (vacances, rentrée,
-    // ponts...). On filtre sur la zone B ET sur une fenêtre d'années scolaires
-    // calculée à partir de la date du jour (année en cours -1 à +2), pour être sûr
-    // de couvrir l'année scolaire actuelle sans dépendre d'un tri/limit hasardeux.
+    // ponts...). On envoie une requête distincte par année scolaire pertinente
+    // (année en cours -1 à +2, calculée à partir de la date du jour) : chaque
+    // requête n'utilise qu'une égalité simple sur un seul champ (déjà éprouvé),
+    // pour éviter les combinaisons and/or plus fragiles côté serveur.
     // Voir data.gouv.fr/dataservices/api-calendrier-scolaire
     function anneesScolairesAConsulter() {
       const maintenant = new Date();
@@ -804,12 +805,9 @@
       return annees;
     }
 
-    function construireRequeteVacancesZoneB() {
-      const clauseAnnees = anneesScolairesAConsulter()
-        .map(a => `annee_scolaire="${a}"`)
-        .join(' or ');
-      const where = encodeURIComponent(`zones="Zone B" and (${clauseAnnees})`);
-      return `https://data.education.gouv.fr/api/v2/catalog/datasets/fr-en-calendrier-scolaire/records?where=${where}&limit=200`;
+    function urlVacancesPourAnnee(annee) {
+      const where = encodeURIComponent(`annee_scolaire="${annee}"`);
+      return `https://data.education.gouv.fr/api/v2/catalog/datasets/fr-en-calendrier-scolaire/records?where=${where}&limit=100`;
     }
 
     // Convertit un horodatage ISO (ex: "2026-10-16T22:00:00+00:00") en date locale
@@ -838,51 +836,57 @@
       return { zone: zone.toLowerCase(), description: description.toLowerCase(), start: debut, end: fin };
     }
 
+    function enregistrementsDepuisReponse(data) {
+      // Structure réelle observée : data.records[].record.fields.{description,
+      // population, start_date, end_date, location, zones, annee_scolaire}
+      if (Array.isArray(data.results)) return data.results;
+      if (Array.isArray(data.records)) return data.records.map(r => (r.record && r.record.fields) || r.fields || r);
+      return [];
+    }
+
     function chargerVacancesZoneB() {
-      fetch(construireRequeteVacancesZoneB())
-        .then(r => {
-          if (!r.ok) throw new Error('Réponse HTTP ' + r.status);
-          return r.json();
-        })
-        .then(data => {
-          console.log('Vacances scolaires — clés reçues :', Object.keys(data).join(', '));
+      const requetes = anneesScolairesAConsulter().map(annee =>
+        fetch(urlVacancesPourAnnee(annee))
+          .then(r => r.ok ? r.json() : null)
+          .catch(() => null)
+      );
 
-          // Structure réelle observée : data.records[].record.fields.{description,
-          // population, start_date, end_date, location, zones, annee_scolaire}
-          const enregistrements = Array.isArray(data.results)
-            ? data.results
-            : (Array.isArray(data.records)
-                ? data.records.map(r => (r.record && r.record.fields) || r.fields || r)
-                : []);
-
-          const periodes = enregistrements
-            .map(extrairePeriodeVacances)
-            // On ne garde que les vraies plages "Vacances de ..." (on écarte les
-            // repères ponctuels "Début/Fin des vacances de ...", redondants).
-            .filter(p => p.zone.includes('zone b')
-              && p.description.includes('vacances')
-              && !p.description.includes('début')
-              && !p.description.includes('fin des')
-              && p.start && p.end);
-
-          if (periodes.length > 0) {
-            // Dédoublonnage (plusieurs académies de zone B partagent les mêmes dates)
-            const vues = new Set();
-            vacancesZoneB = periodes.filter(p => {
-              const cle = p.start + '|' + p.end;
-              if (vues.has(cle)) return false;
-              vues.add(cle);
-              return true;
-            });
-            console.log('Vacances scolaires — périodes zone B chargées depuis l\'API :', vacancesZoneB);
-            renderCalendar();
-          } else {
-            console.warn("Vacances scolaires : réponse de l'API vide ou format inattendu, tableau de secours conservé.");
-          }
-        })
-        .catch(err => {
-          console.warn("Vacances scolaires : API injoignable, utilisation du tableau de secours.", err);
+      Promise.all(requetes).then(reponses => {
+        const enregistrements = [];
+        reponses.forEach(data => {
+          if (data) enregistrements.push(...enregistrementsDepuisReponse(data));
         });
+
+        if (enregistrements.length === 0) {
+          console.warn("Vacances scolaires : API injoignable ou aucune réponse exploitable, tableau de secours conservé.");
+          return;
+        }
+
+        const periodes = enregistrements
+          .map(extrairePeriodeVacances)
+          // On ne garde que les vraies plages "Vacances de ..." (on écarte les
+          // repères ponctuels "Début/Fin des vacances de ...", redondants).
+          .filter(p => p.zone.includes('zone b')
+            && p.description.includes('vacances')
+            && !p.description.includes('début')
+            && !p.description.includes('fin des')
+            && p.start && p.end);
+
+        if (periodes.length > 0) {
+          // Dédoublonnage (plusieurs académies de zone B partagent les mêmes dates)
+          const vues = new Set();
+          vacancesZoneB = periodes.filter(p => {
+            const cle = p.start + '|' + p.end;
+            if (vues.has(cle)) return false;
+            vues.add(cle);
+            return true;
+          });
+          console.log('Vacances scolaires — périodes zone B chargées depuis l\'API :', vacancesZoneB);
+          renderCalendar();
+        } else {
+          console.warn("Vacances scolaires : réponse de l'API vide ou format inattendu, tableau de secours conservé.");
+        }
+      });
     }
 
     function getISOWeekNumber(d) {
