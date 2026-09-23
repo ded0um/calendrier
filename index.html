@@ -477,6 +477,7 @@
       .mini-month { padding: 8px; }
 
       .modal { padding: 14px; gap: 10px; width: 95%; }
+      .modal-overlay { align-items: flex-start; overflow-y: auto; padding: 16px 0; }
     }
 
     @media (max-width: 420px) {
@@ -1119,14 +1120,21 @@
     // Sur PC/iOS, ouvre simplement Gmail dans un nouvel onglet (comportement déjà
     // correct). Sur Android, utilise un lien "intent" pour que Chrome lance
     // directement l'appli Gmail installée plutôt qu'un onglet vers le site.
+    // Important : pas de target="_blank" sur Android, sinon Chrome ouvre un
+    // nouvel onglet au lieu de transmettre le lien intent:// au système.
     // Limite connue : Gmail n'a pas de lien profond documenté vers le dossier
     // Brouillons précisément, l'appli s'ouvrira donc sur sa vue par défaut.
-    function urlBrouillonGmail() {
+    function lienBrouillonGmail() {
       const urlWeb = 'https://mail.google.com/mail/u/0/#drafts';
       const estAndroid = /Android/i.test(navigator.userAgent);
-      if (!estAndroid) return urlWeb;
+
+      if (!estAndroid) {
+        return `<a href="${urlWeb}" target="_blank" style="color:var(--accent);">Brouillon Gmail</a>`;
+      }
+
       const repli = encodeURIComponent(urlWeb);
-      return `intent://mail.google.com/mail/u/0/#Intent;scheme=https;package=com.google.android.gm;S.browser_fallback_url=${repli};end`;
+      const urlIntent = `intent://mail.google.com/mail/u/0/#Intent;scheme=https;package=com.google.android.gm;S.browser_fallback_url=${repli};end`;
+      return `<a href="${urlIntent}" style="color:var(--accent);">Brouillon Gmail</a>`;
     }
 
     function envoyerDemande(btn) {
@@ -1190,7 +1198,7 @@
               congesValides.push(...getDatesEntre(payload.dateDebut, payload.dateFin));
               item.style.flexWrap = 'wrap';
               item.style.gap = '8px';
-              item.innerHTML = `<span>✅ ${payload.dateDebut} → ${payload.dateFin}</span><a href="${reponse.pdfUrl}" target="_blank" style="color:var(--accent);">PDF</a><a href="${urlBrouillonGmail()}" target="_blank" style="color:var(--accent);">Brouillon Gmail</a>`;
+              item.innerHTML = `<span>✅ ${payload.dateDebut} → ${payload.dateFin}</span><a href="${reponse.pdfUrl}" target="_blank" style="color:var(--accent);">PDF</a>${lienBrouillonGmail()}`;
               resultats.appendChild(item);
             } else {
               item.innerHTML = `<span style="color:var(--color-absence);">❌ ${payload.dateDebut} → ${payload.dateFin} : ${reponse.erreur}</span>`;
