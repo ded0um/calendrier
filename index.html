@@ -1116,6 +1116,19 @@
         : 'Activité salariée ◻     Activité non salariée ☑';
     }
 
+    // Sur PC/iOS, ouvre simplement Gmail dans un nouvel onglet (comportement déjà
+    // correct). Sur Android, utilise un lien "intent" pour que Chrome lance
+    // directement l'appli Gmail installée plutôt qu'un onglet vers le site.
+    // Limite connue : Gmail n'a pas de lien profond documenté vers le dossier
+    // Brouillons précisément, l'appli s'ouvrira donc sur sa vue par défaut.
+    function urlBrouillonGmail() {
+      const urlWeb = 'https://mail.google.com/mail/u/0/#drafts';
+      const estAndroid = /Android/i.test(navigator.userAgent);
+      if (!estAndroid) return urlWeb;
+      const repli = encodeURIComponent(urlWeb);
+      return `intent://mail.google.com/mail/u/0/#Intent;scheme=https;package=com.google.android.gm;S.browser_fallback_url=${repli};end`;
+    }
+
     function envoyerDemande(btn) {
       const periode = document.getElementById('demandePeriode').value.trim();
       const enfants = document.getElementById('demandeEnfants').value || '0';
@@ -1177,7 +1190,7 @@
               congesValides.push(...getDatesEntre(payload.dateDebut, payload.dateFin));
               item.style.flexWrap = 'wrap';
               item.style.gap = '8px';
-              item.innerHTML = `<span>✅ ${payload.dateDebut} → ${payload.dateFin}</span><a href="${reponse.pdfUrl}" target="_blank" style="color:var(--accent);">PDF</a><a href="https://mail.google.com/mail/u/0/#drafts" target="_blank" style="color:var(--accent);">Brouillon Gmail</a>`;
+              item.innerHTML = `<span>✅ ${payload.dateDebut} → ${payload.dateFin}</span><a href="${reponse.pdfUrl}" target="_blank" style="color:var(--accent);">PDF</a><a href="${urlBrouillonGmail()}" target="_blank" style="color:var(--accent);">Brouillon Gmail</a>`;
               resultats.appendChild(item);
             } else {
               item.innerHTML = `<span style="color:var(--color-absence);">❌ ${payload.dateDebut} → ${payload.dateFin} : ${reponse.erreur}</span>`;
