@@ -1335,7 +1335,9 @@
       const isFerie = feries.includes(dateStr);
       const isConge = estCongePose(dateStr);
       const isCongeValide = congesValides.includes(dateStr);
-      const isVacances = vacancesZoneB.some(v => dateStr >= v.start && dateStr <= v.end);
+      // v.end correspond au jour de reprise des cours (communiqué officiel), pas
+      // à un jour de vacances : on l'exclut donc de l'intervalle (borne exclusive).
+      const isVacances = vacancesZoneB.some(v => dateStr >= v.start && dateStr < v.end);
       const isToday = dateStr === toISO(new Date());
 
       let isGarde = false;
