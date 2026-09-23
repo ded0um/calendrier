@@ -845,6 +845,14 @@
     }
 
     function chargerVacancesZoneB() {
+      // Test manuel : ouvrir la page avec ?secours=1 dans l'URL saute l'appel à
+      // l'API et garde volontairement le tableau codé en dur (vacancesZoneBSecours),
+      // pour vérifier son affichage sans avoir à couper le réseau.
+      if (new URLSearchParams(window.location.search).get('secours')) {
+        console.log('Vacances scolaires — mode test (?secours=1) : tableau de secours forcé.', vacancesZoneB);
+        return;
+      }
+
       const requetes = anneesScolairesAConsulter().map(annee =>
         fetch(urlVacancesPourAnnee(annee))
           .then(r => r.ok ? r.json() : null)
