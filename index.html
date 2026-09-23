@@ -1132,8 +1132,13 @@
         return `<a href="${urlWeb}" target="_blank" style="color:var(--accent);">Brouillon Gmail</a>`;
       }
 
+      // Le lien https ne fonctionnait pas : Gmail ne revendique visiblement pas
+      // mail.google.com/mail/u/0/ comme "App Link", donc Chrome retombait sur le
+      // site à chaque fois. On demande maintenant directement le lancement de
+      // l'appli (l'équivalent de taper sur son icône), ce qui ne dépend d'aucune
+      // correspondance d'URL et doit fonctionner tant que Gmail est installé.
       const repli = encodeURIComponent(urlWeb);
-      const urlIntent = `intent://mail.google.com/mail/u/0/#Intent;scheme=https;package=com.google.android.gm;S.browser_fallback_url=${repli};end`;
+      const urlIntent = `intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;package=com.google.android.gm;S.browser_fallback_url=${repli};end`;
       return `<a href="${urlIntent}" style="color:var(--accent);">Brouillon Gmail</a>`;
     }
 
