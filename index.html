@@ -1725,6 +1725,17 @@
       chargerVacancesZoneB();
       initNavigationTactile();
     };
-  </script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js', {
+        scope: './'
+      }).then((registration) => {
+        console.log('Service Worker Calendrier enregistré :', registration.scope);
+      }).catch((error) => {
+        console.error('Erreur Service Worker Calendrier :', error);
+      });
+    });
+  }
+</script>
 </body>
 </html>
