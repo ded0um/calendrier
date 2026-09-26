@@ -1,4 +1,4 @@
-const CACHE_NAME = 'calendrier-dedoum-v1';
+const CACHE_NAME = 'calendrier-dedoum-v2';
 const APP_SHELL = [
   './',
   './index.html',
